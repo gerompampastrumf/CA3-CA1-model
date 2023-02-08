@@ -145,13 +145,38 @@ class Bwb(Cell):
         self.soma.insert('Kdrbwb')
 
     def set_synapses(self):
-        self.somaAMPAf  = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)   # background
-        self.somaGABAf  = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) # backgorund
-        #self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=20.0, tau2=40.0, e=-80)# Synapse(sect=self.soma, loc=0.5, tau1=20.0, tau2=40.0, e=-80) # only for septal input # ojo!
-        self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
-        #self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=0,07, tau2=9.1, e=-80) # only for septal inpu
-        self.somaNMDA   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
-        self.syn_list   = ['somaAMPAf','somaGABAf','somaGABAss','somaNMDA']
+        # external noise 
+        self.somaAMPA_noise   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)   
+        self.somaGABA_noise   = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        # external inputs CA3        
+        self.somaAMPA_ec2180  = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0) 
+        self.somaNMDA_ec2180  = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaAMPA_ec2360  = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)                                         # not initially used
+        self.somaNMDA_ec2360  = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)  # not initially used
+        self.somaAMPA_dgreg   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.somaNMDA_dgreg   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaAMPA_dgburst = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0) 
+        self.somaNMDA_dgburst = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        # external inputs in CA1
+        self.somaAMPA_ec3180  = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.somaNMDA_ec3180  = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaAMPA_ec3360  = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.somaNMDA_ec3360  = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaAMPA_pyrCA3  = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.somaNMDA_pyrCA3  = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        # external inputs common 
+        self.somaGABA_sep180  = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        self.somaGABA_sep360  = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        # connections 
+        self.somaGABA_bas     = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        self.somaAMPA_pyr     = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0)
+        self.somaNMDA_pyr     = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0) 
+       
+        # self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=20.0, tau2=40.0, e=-80)# Synapse(sect=self.soma, loc=0.5, tau1=20.0, tau2=40.0, e=-80) # only for septal input # ojo!
+        # self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        # self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=0,07, tau2=9.1, e=-80) # only for septal inpu
+        # self.somaNMDA   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        # self.syn_list   = ['somaAMPAf','somaGABAf','somaGABAss','somaNMDA']
 
 ###############################################################################
 #
@@ -187,17 +212,20 @@ class Ow(Cell):
         self.soma.insert('KCaolmw')
 
     def set_synapses(self):
-        self.somaGABAf  = Synapse(    sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80.0)
-        self.somaAMPAf  = Synapse(    sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
-        #self.somaGABAf.tau  = 2
-        #self.somaGABAf.e = -80
-        #self.somaAMPAf.tau = 2
-        #self.somaAMPAf.e = 0
+        # external noise 
+        self.somaGABA_noise  = Synapse( sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80.0)
+        self.somaAMPA_noise  = Synapse( sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
+        # external inputs (both CA3 and CA1) 
+        self.somaGABA_sep180  = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        self.somaGABA_sep360  = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        # connections
+        self.somaAMPA_pyr = Synapse( sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
+        self.somaNMDA_pyr = SynapseNMDA( sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
 
-        self.somaGABAss = Synapse(    sect=self.soma, loc=0.5, tau1=0.07,   tau2=9.1, e=-80.0) # ojo! #Synapse(    sect=self.soma, loc=0.5, tau1=20.0,   tau2=40.0, e=-80.0) # only for septal input
-        #self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
-        self.somaNMDA   = SynapseNMDA( sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
-        self.syn_list   = ['somaGABAf','somaAMPAf','somaGABAss','somaNMDA']
+        # self.somaGABAss = Synapse(    sect=self.soma, loc=0.5, tau1=0.07,   tau2=9.1, e=-80.0) # ojo! #Synapse(    sect=self.soma, loc=0.5, tau1=20.0,   tau2=40.0, e=-80.0) # only for septal input
+        # self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        # self.somaNMDA   = SynapseNMDA( sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
+        # self.syn_list   = ['somaGABAf','somaAMPAf','somaGABAss','somaNMDA']
 
 ###############################################################################
 #
@@ -286,21 +314,52 @@ class PyrAdr_CA3(Cell):
             seg.nacurrent.ki = 1
 
     def set_synapses(self):
-        self.somaGABAf   = Synapse(    sect=self.soma,   loc=0.5, tau1=0.07, tau2=9.1, e=-80.0) 
-        self.somaGABAfb  = Synapse(    sect=self.soma,   loc=0.3, tau1=0.07, tau2=9.1, e=-80.0) 
-        self.somaAMPAf   = Synapse(    sect=self.soma,   loc=0.7, tau1=0.05, tau2=5.3, e=0.0)
-        self.BdendAMPAf  = Synapse(    sect=self.Bdend,  loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
-        self.BdendNMDA   = SynapseNMDA(sect=self.Bdend,  loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
-        self.Adend1AMPAf = Synapse(    sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
-        self.Adend1NMDA  = SynapseNMDA(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
-        self.Adend2GABAf = Synapse(    sect=self.Adend2, loc=0.5, tau1=0.07, tau2=9.1,  e=-80.0)
-        self.Adend3GABAf = Synapse(    sect=self.Adend3, loc=0.7, tau1=0.07, tau2=9.1,  e=-80.0)
-        self.Adend3GABAfb = Synapse(    sect=self.Adend3, loc=0.7, tau1=0.07, tau2=9.1,  e=-80.0)
-        self.Adend3AMPAf = Synapse(    sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0.0)
-        self.Adend3NMDA  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
+        # external noise 
+        self.somaAMPA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)   
+        self.somaGABA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        self.Adend3AMPA_noise  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0)   
+        self.Adend3GABA_noise  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        # external inputs CA3        
+        self.Adend3AMPA_ec2180  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0) 
+        self.Adend3NMDA_ec2180  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.Adend3AMPA_ec2360  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0)                                         # not initially used
+        self.Adend3NMDA_ec2360  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)  # not initially used
+        self.Adend1AMPA_dgreg   = Synapse(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.Adend1NMDA_dgreg   = SynapseNMDA(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.Adend1AMPA_dgburst = Synapse(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3,  e=0) 
+        self.Adend1NMDA_dgburst = SynapseNMDA(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        # external inputs in CA1 (assiming this as the pyr CA1) s
+        self.Adend3AMPA_ec3180  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0)                                         # not initially used
+        self.Adend3NMDA_ec3180  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)  # not initially used
+        self.Adend3AMPA_ec3360  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.Adend3NMDA_ec3360  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.Adend1AMPA_pyrCA3  = Synapse(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.Adend1NMDA_pyrCA3  = SynapseNMDA(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        # connections in CA3
+        self.somaGABA_bas      = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        self.Adend3GABA_olm    = Synapse(sect=self.Adend3, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        self.BdendAMPA_pyr     = Synapse(sect=self.Bdend, loc=0.5, tau1=0.05, tau2=5.3, e=0)
+        self.BdendNMDA_pyr     = SynapseNMDA(sect=self.Bdend, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        # connections in CA1 (same as previous) +
+        self.somaGABA_cck      = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        self.Adend2GABA_cck    = Synapse(sect=self.Adend2, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+      
+        # self.somaGABAf   = Synapse(    sect=self.soma,   loc=0.5, tau1=0.07, tau2=9.1, e=-80.0) 
+        # self.somaGABAfb  = Synapse(    sect=self.soma,   loc=0.3, tau1=0.07, tau2=9.1, e=-80.0) 
+        # self.somaAMPAf   = Synapse(    sect=self.soma,   loc=0.7, tau1=0.05, tau2=5.3, e=0.0)
+        # self.BdendAMPAf  = Synapse(    sect=self.Bdend,  loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
+        # self.BdendNMDA   = SynapseNMDA(sect=self.Bdend,  loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
+        # self.Adend1AMPAf = Synapse(    sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
+        # self.Adend1NMDA  = SynapseNMDA(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
+        # self.Adend2GABAf = Synapse(    sect=self.Adend2, loc=0.5, tau1=0.07, tau2=9.1,  e=-80.0)
+        # self.Adend3GABAf = Synapse(    sect=self.Adend3, loc=0.7, tau1=0.07, tau2=9.1,  e=-80.0)
+        # self.Adend3GABAfb = Synapse(    sect=self.Adend3, loc=0.7, tau1=0.07, tau2=9.1,  e=-80.0)
+        # self.Adend3AMPAf = Synapse(    sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0.0)
+        # self.Adend3NMDA  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
+      
         ### Synapses onto Adend1
-        self.syn_list = ['Adend3AMPAf','Adend3NMDA','Adend3GABAf', 'Adend2GABAf','Adend1AMPAf','Adend1NMDA',
-                         'somaAMPAf','somaGABAf','somaGABAfb','BdendAMPAf','BdendNMDA']
+        # self.syn_list = ['Adend3AMPAf','Adend3NMDA','Adend3GABAf', 'Adend2GABAf','Adend1AMPAf','Adend1NMDA',
+        #                 'somaAMPAf','somaGABAf','somaGABAfb','BdendAMPAf','BdendNMDA']
 
 ###############################################################################
 #
@@ -403,22 +462,42 @@ class PyrAdr_CA1(Cell):
             sec.hcurrent.gd   = 0.0001
 
     def set_synapses(self):
-        self.somaGABAf   = Synapse(    sect=self.soma,   loc=0.5, tau1=0.07, tau2=9.1, e=-80.0) 
-        self.somaGABAfb  = Synapse(    sect=self.soma,   loc=0.3, tau1=0.07, tau2=9.1, e=-80.0) 
-        self.somaAMPAf   = Synapse(    sect=self.soma,   loc=0.7, tau1=0.05, tau2=5.3, e=0.0)
-        self.BdendAMPAf  = Synapse(    sect=self.Bdend,  loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
-        self.BdendNMDA   = SynapseNMDA(sect=self.Bdend,  loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
-        self.Adend1AMPAf = Synapse(    sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
-        self.Adend1NMDA  = SynapseNMDA(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
-        self.Adend2GABAf = Synapse(    sect=self.Adend2, loc=0.5, tau1=0.07, tau2=9.1,  e=-80.0)
-        self.Adend3GABAf = Synapse(    sect=self.Adend3, loc=0.7, tau1=0.07, tau2=9.1,  e=-80.0)
-        self.Adend3GABAfb = Synapse(    sect=self.Adend3, loc=0.7, tau1=0.07, tau2=9.1,  e=-80.0)
+        # external noise 
+        self.somaAMPA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)   
+        self.somaGABA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        self.Adend3AMPA_noise  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0)   
+        self.Adend3GABA_noise  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        # external inputs
+        self.Adend3AMPA_ec3180  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0)                                         # not initially used
+        self.Adend3NMDA_ec3180  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)  # not initially used
+        self.Adend3AMPA_ec3360  = Synapse(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.Adend3NMDA_ec3360  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.Adend1AMPA_pyrCA3  = Synapse(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.Adend1NMDA_pyrCA3  = SynapseNMDA(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        # connections
+        self.somaGABA_bas      = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        self.Adend3GABA_olm    = Synapse(sect=self.Adend3, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        self.BdendAMPA_pyr     = Synapse(sect=self.Bdend, loc=0.5, tau1=0.05, tau2=5.3, e=0)
+        self.BdendNMDA_pyr     = SynapseNMDA(sect=self.Bdend, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaGABA_cck      = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+        self.Adend2GABA_cck    = Synapse(sect=self.Adend2, loc=0.5, tau1=0.07, tau2=9.1, e=-80)
+      
+        # self.somaGABAf   = Synapse(    sect=self.soma,   loc=0.5, tau1=0.07, tau2=9.1, e=-80.0) 
+        # self.somaGABAfb  = Synapse(    sect=self.soma,   loc=0.3, tau1=0.07, tau2=9.1, e=-80.0) 
+        # self.somaAMPAf   = Synapse(    sect=self.soma,   loc=0.7, tau1=0.05, tau2=5.3, e=0.0)
+        # self.BdendAMPAf  = Synapse(    sect=self.Bdend,  loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
+        # self.BdendNMDA   = SynapseNMDA(sect=self.Bdend,  loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
+        # self.Adend1AMPAf = Synapse(    sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, e=0.0)
+        # self.Adend1NMDA  = SynapseNMDA(sect=self.Adend1, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
+        # self.Adend2GABAf = Synapse(    sect=self.Adend2, loc=0.5, tau1=0.07, tau2=9.1,  e=-80.0)
+        # self.Adend3GABAf = Synapse(    sect=self.Adend3, loc=0.7, tau1=0.07, tau2=9.1,  e=-80.0)
+        # self.Adend3GABAfb = Synapse(    sect=self.Adend3, loc=0.7, tau1=0.07, tau2=9.1,  e=-80.0)
 
-        self.Adend3AMPAf = Synapse(    sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0.0)
-        self.Adend3NMDA  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
+        # self.Adend3AMPAf = Synapse(    sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3,  e=0.0)
+        # self.Adend3NMDA  = SynapseNMDA(sect=self.Adend3, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
         ### Synapses onto Adend1
-        self.syn_list = ['Adend3AMPAf','Adend3NMDA','Adend3GABAf', 'Adend2GABAf','Adend1AMPAf','Adend1NMDA',
-                         'somaAMPAf','somaGABAf','somaGABAfb','BdendAMPAf','BdendNMDA']
+        # self.syn_list = ['Adend3AMPAf','Adend3NMDA','Adend3GABAf', 'Adend2GABAf','Adend1AMPAf','Adend1NMDA',
+        #                 'somaAMPAf','somaGABAf','somaGABAfb','BdendAMPAf','BdendNMDA']
 
 ###############################################################################
 class Cck(Cell):
@@ -491,7 +570,7 @@ class Cck(Cell):
         self.somaGABAf = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80.0) # backgorund
         self.somaNMDA  = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
 
-class Cck_cell(Cell):
+class Cck_cell(Cell): # the correct one
     name = "CCK-expressing cell"
     def set_label(self):
         self.label = "cck"
@@ -548,10 +627,26 @@ class Cck_cell(Cell):
         self.soma(0.5).constant.ic      = 0#-0.00455
 
     def set_synapses(self):
-        self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=20.0, tau2=40.0, e=-80.0) # only for septal input
-        self.somaAMPAf = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0.0)   # background
-        self.somaGABAf = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80.0) # backgorund
-        self.somaNMDA  = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
+        # external noise 
+        self.somaAMPA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)   
+        self.somaGABA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        # external inputs 
+        self.somaAMPA_ec3180   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)                                         # not initially used
+        self.somaNMDA_ec3180   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)  # not initially used
+        self.somaAMPA_ec3360   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.somaNMDA_ec3360   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaAMPA_pyrCA3   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.somaNMDA_pyrCA3   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaGABA_sep180   = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        self.somaGABA_sep360   = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        # connections
+        self.somaAMPA_pyr      = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0)
+        self.somaNMDA_pyr      = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        
+        # self.somaGABAss = Synapse(sect=self.soma, loc=0.5, tau1=20.0, tau2=40.0, e=-80.0) # only for septal input
+        # self.somaAMPAf = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0.0)   # background
+        # self.somaGABAf = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1, e=-80.0) # backgorund
+        # self.somaNMDA  = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0.0)
 
 class Cck_spyros_modified(Cell):
     name = "CCK-expressing cell"
