@@ -461,9 +461,9 @@ class Network:
                 np.random.seed(seed)
                 po = self.__dict__[key]
                 if key.split("_")[0] == "pyr":
-                    keys = ["somaAMPAf","somaGABAf","Adend3AMPAf","Adend3GABAf","Adend3NMDA"]
+                    keys = ["somaAMPA_noise","somaGABA_noise","Adend3AMPA_noise","Adend3GABA_noise","Adend3NMDA_noise"]
                 else:
-                    keys = ["somaAMPAf","somaGABAf"]
+                    keys = ["somaAMPA_noise","somaGABA_noise"]
                 self.delays_noise_neurons[key] = dict.fromkeys(keys)
                 for k in keys:
                     self.delays_noise_neurons[key][k] = np.abs(np.random.normal(delay_mean,sigma*self.jitter,po.n))
