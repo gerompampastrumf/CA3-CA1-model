@@ -457,9 +457,9 @@ class Network:
                 np.random.seed(seed)
                 po = self.__dict__[key]
                 if key.split("_")[0] == "pyr":
-                    keys = ["somaAMPAf","somaGABAf","Adend3AMPAf","Adend3GABAf","Adend3NMDA"]
+                    keys = ["somaAMPA_noise","somaGABA_noise","Adend3AMPA_noise","Adend3GABA_noise","Adend3NMDA_noise"]
                 else:
-                    keys = ["somaAMPAf","somaGABAf"]
+                    keys = ["somaAMPA_noise","somaGABA_noise"]
                 self.delays_noise_neurons[key] = dict.fromkeys(keys)
                 for k in keys:
                     self.delays_noise_neurons[key][k] = np.abs(delay_mean+sigma*np.random.normal(0.0,self.jitter,po.n))
@@ -777,7 +777,7 @@ class Network:
             data = file_management.load_lzma(os.path.join(self.inputs_folder,file))
             x,y = data["tvec"], data["idvec"]
             window = np.logical_and(x>=t0,x<=tf)
-            self.tvec[key]   = x[window]-t0
+            self.tvec[key]   = x[window]-t0+125
             self.idvec[key]  = y[window]
             ncellstims.append(np.max(self.idvec[key])+1)
 
@@ -789,7 +789,7 @@ class Network:
         x,y = data["tvec"], data["idvec"]
 
         window = np.logical_and(x>=t0,x<=tf)
-        self.tvec[key]   = x[window]-t0
+        self.tvec[key]   = x[window]-t0+125
         self.idvec[key]  = y[window]
         ncellstims.append(np.max(self.idvec[key])+1)
 
