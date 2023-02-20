@@ -81,11 +81,12 @@ class Cell:
         #self.__dict__["all_current"] = h.Vector()
         #self.__dict__["all_current"].record(self.__dict__["soma"]._ref_i)
         for name in self.syn_list:
-            self.__dict__[name+"_i"] = h.Vector(int(h.tstop/h.dt)+1)
-            self.__dict__[name+"_i"].record( self.__dict__[name].syn._ref_i )
-            if name.endswith('NMDA'): # iNMDA synapses consits of a sum of an AMPA and NMDA contributions. Why? don't know
-                self.__dict__[name+"_iNMDA"] = h.Vector(int(h.tstop/h.dt)+1)
-                self.__dict__[name+"_iNMDA"].record( self.__dict__[name].syn._ref_iNMDA )
+            if  "NMDA" not in name:
+                self.__dict__["i"+name] = h.Vector(int(h.tstop/h.dt)+1)
+                self.__dict__["i"+name].record( self.__dict__[name].syn._ref_i )
+            else: # iNMDA synapses consits of a sum of an AMPA and NMDA contributions. Why? don't know
+                self.__dict__["i"+name] = h.Vector(int(h.tstop/h.dt)+1)
+                self.__dict__["i"+name].record( self.__dict__[name].syn._ref_iNMDA )
 
     def set_inj(self):
         self.somaInj = h.IClamp(0.5, sec=self.soma)
