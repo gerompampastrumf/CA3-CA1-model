@@ -781,7 +781,7 @@ class Network:
             data = file_management.load_lzma(os.path.join(self.inputs_folder,file))
             x,y = data["tvec"], data["idvec"]
             window = np.logical_and(x>=t0,x<=tf)
-            self.tvec[key]   = x[window]-t0
+            self.tvec[key]   = x[window]-t0+125
             self.idvec[key]  = y[window]
             ncellstims.append(np.max(self.idvec[key])+1)
 
@@ -793,7 +793,7 @@ class Network:
         x,y = data["tvec"], data["idvec"]
 
         window = np.logical_and(x>=t0,x<=tf)
-        self.tvec[key]   = x[window]-t0
+        self.tvec[key]   = x[window]-t0+125
         self.idvec[key]  = y[window]
         ncellstims.append(np.max(self.idvec[key])+1)
 
