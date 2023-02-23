@@ -61,7 +61,7 @@ import sys
 import os
 # import warnings
 # from external_inputs import *
-sys.path.append('/home/jaime/Desktop/hippocampus/files')
+
 import file_management
 
 #warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -112,25 +112,21 @@ class Population:
     def __init__(self, cell_type, pgidlist, n , x, y, z, dx, amp, dur, delay, nseg, record_mp, pyr=False, naux=0,
     x_position = None, y_position = None):
         self.cell = [] # List of cells in the population
-        self.nc   = [] # NetCon list for recording spikes
         self.pgidlist = pgidlist
         self.ng   = len(self.pgidlist) # number of cells in host
         self.n    = n  # number of cells
         self.x    = x
         self.y    = y
         self.z    = z
-        #self.ltimevec = h.List() # list of Vectors for recording spikes, one per cell
-        #self.lidvec = h.List()
-        #self.tvec = h.Vector()
-        #self.idvec = h.Vector()
+
         self.nssidx = {}
         self.nseidx = {}
         self.ncsidx = {}
         self.nceidx = {}
-        self.ncd  = [] # only for pyramidal
+        #self.ncd  = [] # only for pyramidal
 
         self.naux = int(naux) # to distinguish gid from i-th position of the neruon in the network
-        self.nc_conn = []
+        #self.nc_conn = []
         if pyr:
             for i in self.pgidlist: #range(n):
                 #self.cell.append(cell_type(x+i*dx,y,z,gGID))
@@ -203,7 +199,7 @@ class Network:
                record_mp = {"soma":True, "Bdend":False, "Adend1":False, "Adend2":False, "Adend3":False} ):
 
         self.nseg_pyr = nseg_pyr
-        print("Setting Cells")
+        print("1) Setting Cells")
         self.weights_inputs_neurons  = weights_inputs_neurons
         self.nsyns_inputs_neurons    = nsyns_inputs_neurons
         self.syn_inputs_neurons      = syn_inputs_neurons
@@ -235,6 +231,7 @@ class Network:
         self.n_bas_ca1 = n_bas_ca1
         self.n_olm_ca1 = n_olm_ca1
         self.n_cck_ca1 = n_cck_ca1
+        print("2) Topology")
         self.set_pyramidal_topology(type=self.topology) #this will change the number of neurons
 
         self.n_pop = [self.n_pyr_ca3, self.n_bas_ca3, self.n_olm_ca3]
@@ -245,7 +242,8 @@ class Network:
 
         self.n_pop = np.cumsum(self.n_pop)
         self.n = self.n_pop[-1]
-
+        
+        print("3) Population")
         self.set_gids()
         self.create_populations()
 
@@ -273,10 +271,11 @@ class Network:
         self.inputs_folder = inputs_folder
         self.burst_level_label = burst_level_label
         self.external_inputs_label = external_inputs_label
-
+        
         self.set_delays_distribution()
+        self.int_conn = {}
         if connections:
-            print("Setting Connections")
+            print("5) Setting Connections")
             self.set_all_conns()
 
     def set_pyramidal_topology(self, type):
@@ -362,11 +361,13 @@ class Network:
 
         if self.DoMakeExternalInputs:
             if self.MakeCellStim:
+                print("-----NOT EXECUTED------ ")
                 if self.MakeCellStim_python: 
                     self.make_all_CellStims_python(simdur)
                 else: 
                     self.make_all_CellStims(simdur)
             else:
+                
                 self.load_all_CellStims(simdur)
         else:
             print("Simulation without external inputs")
@@ -375,24 +376,13 @@ class Network:
 
     #both should be called @ beginning of each sim
     def init_NetStims(self):
+        print("9) initialising background")
         # h.mcell_ran4_init(self.iseed)
         for i in range(len(self.nrl)):
             rds = self.nrl[i]
             sead = self.nrlsead[i]
             rds.MCellRan4(sead,sead)
             rds.negexp(1)
-
-    def init_CellStims(self):
-        print('---------------------')
-        print('INIT CELLSTIMS')
-        # print(len(self.nrl_))
-        print('---------------------')
-        for i in range(len(self.nrl_)):
-            rds = self.nrl_[i]
-            rds.start()
-            rds.set_generator()
-            # print(i,rds.sead)
-        # print('------------')   
 
     def make_NetStims(self, po, syn, delay, w, ISI, time_limit, add_to_sead): #added delay in 24th
         ''' noise for background '''
@@ -439,6 +429,7 @@ class Network:
         return add_to_sead
 
     def set_delays_distribution(self):
+        print("4) Delays")
         # I generate delays for every input and noise source
         self.sigma_noise  = 0.0
         self.sigma_inputs = 0.0
@@ -525,35 +516,70 @@ class Network:
                 self.delays_noise_neurons[key][k] = np.abs(delay_mean+sigma*np.random.normal(0.0,self.jitter,po.n))
             seed+=1
         return seed
+   
+    def load_all_CellStims(self,simdur):
+        print("8) Loading CellsStims")
+        self.ncl_ = {}
+        # file_folder = os.path.join(os.getcwd(),"external_inputs")
+        keys = ['sep_180','sep_360','ec2_180','ec2_360','ec3_180','ec3_360','dg_regular','dg_burst']
 
-    def make_all_NetStims(self,simdur): #,rdmseed):
-        print("Making NetStims")
-        self.netstims_tvec = {} # saving all
-        self.netstims_ivec = {}
-        self.nsl = [] # NetStim List
-        self.ncl = [] # NetCon List
-        self.nrl = [] # Random List for NetStims
-        self.nrlsead = [] #List of seeds for NetStim random
+        self.tvec = dict.fromkeys(keys)
+        self.idvec = dict.fromkeys(keys)
+        t0 = 0#4050 # 50 + thermalization time
+        tf = simdur+t0
+        extra_label = "_"+self.external_inputs_label
+        ncellstims = []
+        for key in keys[:-1]:
+            file = "external_inputs_"+key+extra_label+".lzma"
+            data = file_management.load_lzma(os.path.join(self.inputs_folder,file))
+            x,y = data["tvec"], data["idvec"]
+            window = np.logical_and(x>=t0,x<=tf)
+            self.tvec[key]   = x[window]-t0+125
+            self.idvec[key]  = y[window]
+            ncellstims.append(np.max(self.idvec[key])+1)
+        
+        key=keys[-1]
+        file = "external_inputs_"+key+extra_label+".lzma"
+        burst_folder = os.path.join(self.inputs_folder, self.burst_level_label)
+        data = file_management.load_lzma(os.path.join(burst_folder,file))
+        x,y = data["tvec"], data["idvec"]
+        window = np.logical_and(x>=t0,x<=tf)
+        self.tvec[key]   = x[window]-t0+125
+        self.idvec[key]  = y[window]
+        ncellstims.append(np.max(self.idvec[key])+1)
 
-        print("Making Background Noise")
-        rdtmp = 0 # add_to_sead value - incremented in make_NetStims
-        for cell in self.cell_labels:
-            if cell.endswith("ca3"):
-                print("to "+cell.split("_")[0]+" "+cell.split("_")[1])
-                po = self.__dict__[cell]
-                for syn in self.weights_noise_neurons[cell].keys():
-                    delays = self.delays_noise_neurons[cell][syn]
-                    weight = self.weights_noise_neurons[cell][syn]
-                    rdtmp  = self.make_NetStims(po=po, syn=syn, delay=delays, w=weight,  ISI=self.ISI_noise,  time_limit=simdur, add_to_sead=rdtmp)#, sead=rdtmp)
+        print("Setting the connections")
+        self.set_CellStims_connections(ncellstims)
 
-            if self.create_ca1_network & cell.endswith("ca1"):
-                print("to "+cell.split("_")[0]+" "+cell.split("_")[1])
-                po = self.__dict__[cell]
-                for syn in self.weights_noise_neurons[cell].keys():
-                    delays = self.delays_noise_neurons[cell][syn]
-                    weight = self.weights_noise_neurons[cell][syn]
-                    rdtmp  = self.make_NetStims(po=po, syn=syn, delay=delays, w=weight,  ISI=self.ISI_noise,  time_limit=simdur, add_to_sead=rdtmp)#, sead=rdtmp)
+        print("Creating dictionary with all parameters")
+        keys1 = self.weights_inputs_neurons.keys()
+        keys2 = ["idv", "spikes", "population", "synapses", "delays", "weights", "connectivity"]
+        self.external_inputs_data = dict.fromkeys(keys1)
+        for key in keys1:
+            if key.endswith("ca3"):
+                self.external_inputs_data[key] = dict.fromkeys(keys2)
+                inputs = key.split("_to_")[0]
+                po = self.__dict__[key.split("_to_")[1]]
+                self.external_inputs_data[key]["idv"]          = self.idvec[inputs]
+                self.external_inputs_data[key]["spikes"]       = self.tvec[inputs]
+                self.external_inputs_data[key]["population"]   = po
+                self.external_inputs_data[key]["synapses"]     = self.syn_inputs_neurons[key]
+                self.external_inputs_data[key]["delays"]       = self.delays_inputs_neurons[key]
+                self.external_inputs_data[key]["weights"]      = self.weights_inputs_neurons[key]
+                self.external_inputs_data[key]["connectivity"] = self.connectivity_inputs_neurons[key]
 
+            if self.create_ca1_network & key.endswith("ca1"):
+                self.external_inputs_data[key] = dict.fromkeys(keys2)
+                inputs = key.split("_to_")[0]
+                po = self.__dict__[key.split("_to_")[1]]
+                self.external_inputs_data[key]["idv"]          = self.idvec[inputs]
+                self.external_inputs_data[key]["spikes"]       = self.tvec[inputs]
+                self.external_inputs_data[key]["population"]   = po
+                self.external_inputs_data[key]["synapses"]     = self.syn_inputs_neurons[key]
+                self.external_inputs_data[key]["delays"]       = self.delays_inputs_neurons[key]
+                self.external_inputs_data[key]["weights"]      = self.weights_inputs_neurons[key]
+                self.external_inputs_data[key]["connectivity"] = self.connectivity_inputs_neurons[key]
+    
     def set_CellStims_connections(self, ncellstims):
         keys = ["sep_180","sep_360","ec2_180","ec2_360","ec3_180","ec3_360","dg_regular","dg_burst"]
         inputs = dict.fromkeys(keys)
@@ -578,12 +604,237 @@ class Network:
                 for n in self.nsyns_inputs_neurons[key]:
                     self.connectivity_inputs_neurons[key].append( self.set_connectivity(ninputs, po.n, n) )
 
+    def make_conn(self, preN, postN, conv):
+        conn = np.zeros((postN,conv),dtype=np.int16)
+        for i in range(postN):
+            conn[i,:]=random.sample(range(preN),conv)
+        return conn
+
+    def set_connectivity(self, nsrc, ntrg, conv):
+        conn = self.make_conn(nsrc,ntrg,conv)
+        conn_ = conn[ np.arange(pc.id(), ntrg, pc.nhost()),:]
+        return conn_
+
+    def set_cells_connectivity(self):
+        random.seed(self.wseed)
+        ''' Set the connectivity '''
+        keys = self.weights_neurons_neurons.keys()
+        self.connectivity_neurons_neurons = dict.fromkeys(keys)
+        for key in keys:
+            if key.endswith("ca3"):
+                print(key)
+                from_po = self.__dict__[key.split("_to_")[0]]
+                to_po   = self.__dict__[key.split("_to_")[1]]
+                self.connectivity_neurons_neurons[key] = []
+                for n in self.nsyns_neurons_neurons[key]:
+                    self.connectivity_neurons_neurons[key].append( self.set_connectivity(from_po.n, to_po.n, n) )
+                
+            if self.create_ca1_network & key.endswith("ca1"):
+                from_po = self.__dict__[key.split("_to_")[0]]
+                to_po   = self.__dict__[key.split("_to_")[1]]
+                self.connectivity_neurons_neurons[key] = [] 
+                for n in self.nsyns_neurons_neurons[key]:
+                    self.connectivity_neurons_neurons[key].append( self.set_connectivity(from_po.n, to_po.n, n) )
+                
+
+    def set_all_conns(self):
+        print("6) Making connections among populations")
+        print("------------------------------------")
+        self.set_cells_connectivity()
+        
+        for key in self.weights_neurons_neurons.keys():
+            if key.endswith("ca3"):
+                # print(key)
+                from_po = self.__dict__[key.split("_to_")[0]]
+                to_po   = self.__dict__[key.split("_to_")[1]]
+                delays  = self.delays_neurons_neurons[key]
+                syn     = self.syn_neurons_neurons[key]
+                weights = self.weights_neurons_neurons[key]
+                conn    = self.connectivity_neurons_neurons[key]
+                self.set_connections(from_po, to_po, syn, delays, weights, conn,key)
+                # print(key.split("_to_")[0], key.split("_to_")[1], syn, weights)
+                # print(conn)
+                # print(' ')
+                # print(delays)
+                # print('-----------------------------------')
+            if self.create_ca1_network & key.endswith("ca1"):
+                from_po = self.__dict__[key.split("_to_")[0]]
+                to_po   = self.__dict__[key.split("_to_")[1]]
+                delays  = self.delays_neurons_neurons[key]
+                syn     = self.syn_neurons_neurons[key]
+                weights = self.weights_neurons_neurons[key]
+                conn    = self.connectivity_neurons_neurons[key]
+                self.set_connections(from_po, to_po, syn, delays, weights, conn,key)
+    
+    def make_all_NetStims(self,simdur): #,rdmseed):
+        print("7) Making Background Noise")
+        self.netstims_tvec = {} # saving all
+        self.netstims_ivec = {}
+        self.nsl = [] # NetStim List
+        self.ncl = [] # NetCon List
+        self.nrl = [] # Random List for NetStims
+        self.nrlsead = [] #List of seeds for NetStim random
+
+        
+        rdtmp = 0 # add_to_sead value - incremented in make_NetStims
+        for cell in self.cell_labels:
+            if cell.endswith("ca3"):
+                print("to "+cell.split("_")[0]+" "+cell.split("_")[1])
+                po = self.__dict__[cell]
+                for syn in self.weights_noise_neurons[cell].keys():
+                    delays = self.delays_noise_neurons[cell][syn]
+                    weight = self.weights_noise_neurons[cell][syn]
+                    rdtmp  = self.make_NetStims(po=po, syn=syn, delay=delays, w=weight,  ISI=self.ISI_noise,  time_limit=simdur, add_to_sead=rdtmp)#, sead=rdtmp)
+
+            if self.create_ca1_network & cell.endswith("ca1"):
+                print("to "+cell.split("_")[0]+" "+cell.split("_")[1])
+                po = self.__dict__[cell]
+                for syn in self.weights_noise_neurons[cell].keys():
+                    delays = self.delays_noise_neurons[cell][syn]
+                    weight = self.weights_noise_neurons[cell][syn]
+                    rdtmp  = self.make_NetStims(po=po, syn=syn, delay=delays, w=weight,  ISI=self.ISI_noise,  time_limit=simdur, add_to_sead=rdtmp)#, sead=rdtmp)
+    #Internal synaptic connectivity - Sets connections between two populations src->trg
+    #The i synapse type is stored in self.int_conn[key_con][syn_list[i]].
+    def set_connections(self,src,trg,syn_list,delay,w_list,conn,key_con, print_=False): # mirar esto con detalle
+        #conn = self.make_conn(src.n,trg.ng,conv, trg)
+        #conn = self.make_conn(src.n,trg.n,conv, trg)
+        #conn = conn[ np.arange(pc.id(), trg.n, pc.nhost()),:]
+        self.int_conn[key_con] = {}
+        print(syn_list)
+        for syn in syn_list[0]:
+            self.int_conn[key_con][syn]=[]
+        for k, conn_ in enumerate(conn):
+            for post_id, all_pre in enumerate(conn_):
+                #trg_id = trg.pgidlist[post_id]
+                #delays = delay[:,post_id]
+                #print(post_id,delays)
+                for j, pre_id in enumerate(all_pre):
+                    src_id = pre_id+src.naux
+                    for syn,w in zip(syn_list[k],w_list[k]):
+                        #trg.nc.append(pc.gid_connect(src_id, pc.gid2cell(trg_id).__dict__[syn].syn))
+                        self.int_conn[key_con][syn].append(pc.gid_connect(pre_id+src.naux, trg.cell[post_id].__dict__[syn].syn))
+                        self.int_conn[key_con][syn][-1].weight[0] = w
+                        self.int_conn[key_con][syn][-1].delay = delay[k][j,post_id]
+                        self.int_conn[key_con][syn][-1].threshold = 0.0
+        if self.SaveConn:
+            try:
+                print(self.nqcon.size())
+            except:
+                self.nqcon = h.NQS("id1","id2","w","syn")
+                self.nqcon.strdec("syn")
+            for post_id, all_pre in enumerate(conn):
+                for j, pre_id in enumerate(all_pre):
+                    self.nqcon.append(src.cell[pre_id].id,trg.cell[post_id].id,w,syn)
+
+    def record_synaptic_currents(self): #optional
+        ''' save synaptic currents that every neuron receives '''
+        for cell in self.cell_ca3: #the three population unified
+            cell.record_synapses()
+        if self.create_ca1_network:
+            for cell in self.cell_ca1:
+                cell.record_synapses()
+
+    def get_synaptic_currents(self):
+        '''
+        It must be called after simulation and record must have been called previously
+        '''
+        polist = [self.pyr_ca3, self.bas_ca3, self.olm_ca3] # added 11/03/2022
+        if self.create_ca1_network:
+            polist += [self.pyr_ca1, self.bas_ca1, self.olm_ca1]
+        for po in polist:
+            cell = po.cell[0]
+            nsecs = len(cell.sec_list)
+            seclist = cell.sec_list
+            synlist = cell.syn_list
+
+            syn_per_sec = {sec: [] for sec in seclist}
+            for sec in seclist:
+                for syn in synlist:
+                    if sec in syn:
+                        syn_per_sec[sec].append(syn)
+                        po.__dict__[sec+"_isyn"][syn.replace(sec,"")] = []
+
+            for cell in po.cell:
+                for sec, syn_list in syn_per_sec.items():
+                    for syn in syn_list:
+                        syn_ = syn.replace(sec,"")
+                        po.__dict__[sec+"_isyn"][syn_].append( np.array(cell.__dict__[syn+"_i"].to_python()) )
+                        if "NMDA" in syn:
+                            po.__dict__[sec+"_isyn"][syn_][-1] += np.array( cell.__dict__[syn+"_iNMDA"].to_python() )
+                        #if "NMDA" not in syn:
+                        #   po.__dict__[sec+"_isyn"][syn_].append( np.array(cell.__dict__[syn+"_i"].to_python()) )
+                        #else:
+                        #    po.__dict__[sec+"_isyn"][syn_].append( np.array(cell.__dict__[syn+"_i"].to_python() )+ cell.__dict__[syn+"_iNMDA"].to_python())
+            for sec, syn_list in syn_per_sec.items():
+                #po.__dict__[sec+"_isyn"]["all"] = 0
+                for syn in syn_list:
+                    syn_ = syn.replace(sec,"")
+                    po.__dict__[sec+"_isyn"][syn_] = np.sum( np.array(po.__dict__[sec+"_isyn"][syn_]), axis=0 )
+                    # the mean will be computed in host 0 when all elements where placed
+                    #po.__dict__[sec+"_isyn"]["all"] += po.__dict__[sec+"_isyn"][syn_]
+"""
+    def record_external_inputs(self, CellStim, tvec, idvec):
+        nil = h.Section(name='nil')
+        nil.insert('hh')
+        syn_ = h.ExpSyn(nil(0.5))
+        for i in range(len(CellStim)):
+            nc = h.NetCon(CellStim[i],syn_)
+            nc.record(tvec,idvec,i)
+            
+    def get_synaptic_currents_v2(self):
+
+        polist = [self.pyr_ca3, self.bas_ca3, self.olm_ca3] # added 16/03/2022
+        if self.create_ca1_network:
+            polist += [self.pyr_ca1, self.bas_ca1, self.olm_ca1]
+
+        for po in polist:
+            cell = po.cell[0]
+            nsecs = len(cell.sec_list)
+            seclist = cell.sec_list
+            synlist = cell.syn_list
+
+            for cell in po.cell:
+                for syn in synlist:
+                    if "NMDA" in syn:
+                        po.__dict__[syn+"_mean"].append( np.array( cell.__dict__[syn+"_iNMDA"].to_python()) )
+                    else:
+                        po.__dict__[syn+"_mean"].append( np.array( cell.__dict__[syn+"_i"].to_python()) )
+
+            for syn in synlist:
+                po.__dict__[syn+"_mean"] = np.sum( np.array(po.__dict__[syn+"_mean"]), axis=0 )      
+    def calc_lfp(self): # lfp is modeled as a difference between voltages in distal apical and basal compartemnts
+        self.vlfp_ca3 = h.Vector(self.pyr_ca3.cell[0].Adend3_volt.size()) #lfp in neuron Vector
+        for cell in self.pyr_ca3.cell:
+            self.vlfp_ca3.add(cell.Adend3_volt)
+            self.vlfp_ca3.sub(cell.Bdend_volt)
+        #self.vlfp_ca3.div(len(self.pyr_ca3.cell)) # normalize lfp by amount of pyr cells
+        self.vlfp_ca3=np.array(self.vlfp_ca3.to_python())
+
+        if self.create_ca1_network:
+            self.vlfp_ca1 = h.Vector(self.pyr_ca1.cell[0].Adend3_volt.size())
+            for cell in self.pyr_ca1.cell:
+                self.vlfp_ca1.add(cell.Adend3_volt)
+                self.vlfp_ca1.sub(cell.Bdend_volt)
+            #self.vlfp_ca1.div(len(self.pyr_ca1.cell)) # normalize lfp by amount of pyr cells
+            self.vlfp_ca1=np.array(self.vlfp_ca1.to_python())
+
+    def set_input_connection(self,ns_src,trg,syn_list,delay,w_list,conn, save=False, name='noname'):
+         print("----NOT EXECUTED---------")
+        '''Important: syn_list and w_list must be lists.'''
+        for k, conn_ in enumerate(conn):
+            for post_id, all_pre in enumerate(conn_):
+                for j, pre_id in enumerate(all_pre):
+                    for syn,w in zip(syn_list[k],w_list[k]):
+                        self.ncl_.append(h.NetCon(ns_src[pre_id], trg.cell[post_id].__dict__[syn].syn, 0, delay[j,post_id], w))
+    
+
     def make_all_CellStims_python(self,simdur):
+        print("-----NOT EXECUTED------------")
         '''
         This function load the external inputs created by  make_external_inputs_python
         '''
         self.ncl_ =[]
-        print("Making external inputs")
+        
         self.idvec, self.tvec, self.nsl_n, labels, self.input_time = make_external_inputs_python(simdur, self.iseed, pburst=0.5)
 
         print("Making cellstims connectionss")
@@ -626,7 +877,7 @@ class Network:
         loaded to be further sent to the main file to create the connections.
         This is necessary for the effective VecStim implementation.
         '''
-        print("Making CellStims")
+        print("----NOT EXECUTED---------")
         self.nsl_  = [] #CellStims List
         self.nsl_n = []
         self.ncl_  = [] #NetCon List
@@ -710,260 +961,18 @@ class Network:
             self.external_inputs_data[key]["delays"]       = self.delays_inputs_neurons[key]
             self.external_inputs_data[key]["weights"]      = self.weights_inputs_neurons[key]
             self.external_inputs_data[key]["connectivity"] = self.connectivity_inputs_neurons[key]
-
-    def record_external_inputs(self, CellStim, tvec, idvec):
-        nil = h.Section(name='nil')
-        nil.insert('hh')
-        syn_ = h.ExpSyn(nil(0.5))
-        for i in range(len(CellStim)):
-            nc = h.NetCon(CellStim[i],syn_)
-            nc.record(tvec,idvec,i)
-
-    def set_input_connection(self,ns_src,trg,syn_list,delay,w_list,conn, save=False, name='noname'):
-        '''Important: syn_list and w_list must be lists.'''
-        for k, conn_ in enumerate(conn):
-            for post_id, all_pre in enumerate(conn_):
-                for j, pre_id in enumerate(all_pre):
-                    for syn,w in zip(syn_list[k],w_list[k]):
-                        self.ncl_.append(h.NetCon(ns_src[pre_id], trg.cell[post_id].__dict__[syn].syn, 0, delay[j,post_id], w))
-
-    def make_conn(self, preN, postN, conv):
-        conn = np.zeros((postN,conv),dtype=np.int16)
-        for i in range(postN):
-            conn[i,:]=random.sample(range(preN),conv)
-        return conn
-
-    def set_connectivity(self, nsrc, ntrg, conv):
-        conn = self.make_conn(nsrc,ntrg,conv)
-        conn_ = conn[ np.arange(pc.id(), ntrg, pc.nhost()),:]
-        return conn_
-
-    def set_cells_connectivity(self):
-        random.seed(self.wseed)
-        ''' Set the connectivity '''
-        keys = self.weights_neurons_neurons.keys()
-        self.connectivity_neurons_neurons = dict.fromkeys(keys)
-        for key in keys:
-            if key.endswith("ca3"):
-                print(key)
-                from_po = self.__dict__[key.split("_to_")[0]]
-                to_po   = self.__dict__[key.split("_to_")[1]]
-                self.connectivity_neurons_neurons[key] = []
-                for n in self.nsyns_neurons_neurons[key]:
-                    self.connectivity_neurons_neurons[key].append( self.set_connectivity(from_po.n, to_po.n, n) )
-            
-            if self.create_ca1_network & key.endswith("ca1"):
-                from_po = self.__dict__[key.split("_to_")[0]]
-                to_po   = self.__dict__[key.split("_to_")[1]]
-                self.connectivity_neurons_neurons[key] = [] 
-                for n in self.nsyns_neurons_neurons[key]:
-                    self.connectivity_neurons_neurons[key].append( self.set_connectivity(from_po.n, to_po.n, n) )
-
-    def set_all_conns(self):
-        self.set_cells_connectivity()
-        print("Making connections among populations")
-        print("------------------------------------")
-        for key in self.weights_neurons_neurons.keys():
-            if key.endswith("ca3"):
-                # print(key)
-                from_po = self.__dict__[key.split("_to_")[0]]
-                to_po   = self.__dict__[key.split("_to_")[1]]
-                delays  = self.delays_neurons_neurons[key]
-                syn     = self.syn_neurons_neurons[key]
-                weights = self.weights_neurons_neurons[key]
-                conn    = self.connectivity_neurons_neurons[key]
-                self.set_connections(from_po, to_po, syn, delays, weights, conn)
-                # print(key.split("_to_")[0], key.split("_to_")[1], syn, weights)
-                # print(conn)
-                # print(' ')
-                # print(delays)
-                # print('-----------------------------------')
-            if self.create_ca1_network & key.endswith("ca1"):
-                from_po = self.__dict__[key.split("_to_")[0]]
-                to_po   = self.__dict__[key.split("_to_")[1]]
-                delays  = self.delays_neurons_neurons[key]
-                syn     = self.syn_neurons_neurons[key]
-                weights = self.weights_neurons_neurons[key]
-                conn    = self.connectivity_neurons_neurons[key]
-                self.set_connections(from_po, to_po, syn, delays, weights, conn)
+    
+    def init_CellStims(self):
+        print('----------NOT EXECUTED-----------')
+        # print(len(self.nrl_))
+        for i in range(len(self.nrl_)):
+            rds = self.nrl_[i]
+            rds.start()
+            rds.set_generator()
+            # print(i,rds.sead)
+        # print('------------')  
 
     def set_conn_weight(self, conn, weight):
         for nc in conn:
             nc.weight[0] = weight
-
-    def set_connections(self,src,trg,syn_list,delay,w_list,conn, print_=False): # mirar esto con detalle
-        #conn = self.make_conn(src.n,trg.ng,conv, trg)
-        #conn = self.make_conn(src.n,trg.n,conv, trg)
-        #conn = conn[ np.arange(pc.id(), trg.n, pc.nhost()),:]
-        for k, conn_ in enumerate(conn):
-            for post_id, all_pre in enumerate(conn_):
-                #trg_id = trg.pgidlist[post_id]
-                #delays = delay[:,post_id]
-                #print(post_id,delays)
-                for j, pre_id in enumerate(all_pre):
-                    src_id = pre_id+src.naux
-                    for syn,w in zip(syn_list[k],w_list[k]):
-                        #trg.nc.append(pc.gid_connect(src_id, pc.gid2cell(trg_id).__dict__[syn].syn))
-                        trg.nc.append(pc.gid_connect(pre_id+src.naux, trg.cell[post_id].__dict__[syn].syn))
-                        trg.nc[-1].weight[0] = w
-                        trg.nc[-1].delay = delay[k][j,post_id]
-                        trg.nc[-1].threshold = 0.0
-
-        if self.SaveConn:
-            try:
-                print(self.nqcon.size())
-            except:
-                self.nqcon = h.NQS("id1","id2","w","syn")
-                self.nqcon.strdec("syn")
-            for post_id, all_pre in enumerate(conn):
-                for j, pre_id in enumerate(all_pre):
-                    self.nqcon.append(src.cell[pre_id].id,trg.cell[post_id].id,w,syn)
-
-    def calc_lfp(self): # lfp is modeled as a difference between voltages in distal apical and basal compartemnts
-        self.vlfp_ca3 = h.Vector(self.pyr_ca3.cell[0].Adend3_volt.size()) #lfp in neuron Vector
-        for cell in self.pyr_ca3.cell:
-            self.vlfp_ca3.add(cell.Adend3_volt)
-            self.vlfp_ca3.sub(cell.Bdend_volt)
-        #self.vlfp_ca3.div(len(self.pyr_ca3.cell)) # normalize lfp by amount of pyr cells
-        self.vlfp_ca3=np.array(self.vlfp_ca3.to_python())
-
-        if self.create_ca1_network:
-            self.vlfp_ca1 = h.Vector(self.pyr_ca1.cell[0].Adend3_volt.size())
-            for cell in self.pyr_ca1.cell:
-                self.vlfp_ca1.add(cell.Adend3_volt)
-                self.vlfp_ca1.sub(cell.Bdend_volt)
-            #self.vlfp_ca1.div(len(self.pyr_ca1.cell)) # normalize lfp by amount of pyr cells
-            self.vlfp_ca1=np.array(self.vlfp_ca1.to_python())
-
-    def record_synaptic_currents(self): #optional
-        ''' save synaptic currents that every neuron receives '''
-        for cell in self.cell_ca3: #the three population unified
-            cell.record_synapses()
-        if self.create_ca1_network:
-            for cell in self.cell_ca1:
-                cell.record_synapses()
-
-    def get_synaptic_currents(self):
-        '''
-        It must be called after simulation and record must have been called previously
-        '''
-        polist = [self.pyr_ca3, self.bas_ca3, self.olm_ca3] # added 11/03/2022
-        if self.create_ca1_network:
-            polist += [self.pyr_ca1, self.bas_ca1, self.olm_ca1]
-        for po in polist:
-            cell = po.cell[0]
-            nsecs = len(cell.sec_list)
-            seclist = cell.sec_list
-            synlist = cell.syn_list
-
-            syn_per_sec = {sec: [] for sec in seclist}
-            for sec in seclist:
-                for syn in synlist:
-                    if sec in syn:
-                        syn_per_sec[sec].append(syn)
-                        po.__dict__[sec+"_isyn"][syn.replace(sec,"")] = []
-
-            for cell in po.cell:
-                for sec, syn_list in syn_per_sec.items():
-                    for syn in syn_list:
-                        syn_ = syn.replace(sec,"")
-                        po.__dict__[sec+"_isyn"][syn_].append( np.array(cell.__dict__[syn+"_i"].to_python()) )
-                        if "NMDA" in syn:
-                            po.__dict__[sec+"_isyn"][syn_][-1] += np.array( cell.__dict__[syn+"_iNMDA"].to_python() )
-                        #if "NMDA" not in syn:
-                        #   po.__dict__[sec+"_isyn"][syn_].append( np.array(cell.__dict__[syn+"_i"].to_python()) )
-                        #else:
-                        #    po.__dict__[sec+"_isyn"][syn_].append( np.array(cell.__dict__[syn+"_i"].to_python() )+ cell.__dict__[syn+"_iNMDA"].to_python())
-            for sec, syn_list in syn_per_sec.items():
-                #po.__dict__[sec+"_isyn"]["all"] = 0
-                for syn in syn_list:
-                    syn_ = syn.replace(sec,"")
-                    po.__dict__[sec+"_isyn"][syn_] = np.sum( np.array(po.__dict__[sec+"_isyn"][syn_]), axis=0 )
-                    # the mean will be computed in host 0 when all elements where placed
-                    #po.__dict__[sec+"_isyn"]["all"] += po.__dict__[sec+"_isyn"][syn_]
-
-    def get_synaptic_currents_v2(self):
-
-        polist = [self.pyr_ca3, self.bas_ca3, self.olm_ca3] # added 16/03/2022
-        if self.create_ca1_network:
-            polist += [self.pyr_ca1, self.bas_ca1, self.olm_ca1]
-
-        for po in polist:
-            cell = po.cell[0]
-            nsecs = len(cell.sec_list)
-            seclist = cell.sec_list
-            synlist = cell.syn_list
-
-            for cell in po.cell:
-                for syn in synlist:
-                    if "NMDA" in syn:
-                        po.__dict__[syn+"_mean"].append( np.array( cell.__dict__[syn+"_iNMDA"].to_python()) )
-                    else:
-                        po.__dict__[syn+"_mean"].append( np.array( cell.__dict__[syn+"_i"].to_python()) )
-
-            for syn in synlist:
-                po.__dict__[syn+"_mean"] = np.sum( np.array(po.__dict__[syn+"_mean"]), axis=0 )
-
-    def load_all_CellStims(self,simdur):
-
-        self.ncl_ = []
-        print("Loading CellsStims")
-        # file_folder = os.path.join(os.getcwd(),"external_inputs")
-        keys = ['sep_180','sep_360','ec2_180','ec2_360','ec3_180','ec3_360','dg_regular','dg_burst']
-
-        self.tvec = dict.fromkeys(keys)
-        self.idvec = dict.fromkeys(keys)
-        t0 = 0#4050 # 50 + thermalization time
-        tf = simdur+t0
-        extra_label = "_"+self.external_inputs_label
-        ncellstims = []
-        for key in keys[:-1]:
-            file = "external_inputs_"+key+extra_label+".lzma"
-            data = file_management.load_lzma(os.path.join(self.inputs_folder,file))
-            x,y = data["tvec"], data["idvec"]
-            window = np.logical_and(x>=t0,x<=tf)
-            self.tvec[key]   = x[window]-t0+125
-            self.idvec[key]  = y[window]
-            ncellstims.append(np.max(self.idvec[key])+1)
-        
-        key=keys[-1]
-        file = "external_inputs_"+key+extra_label+".lzma"
-        burst_folder = os.path.join(self.inputs_folder, self.burst_level_label)
-        data = file_management.load_lzma(os.path.join(burst_folder,file))
-        x,y = data["tvec"], data["idvec"]
-        window = np.logical_and(x>=t0,x<=tf)
-        self.tvec[key]   = x[window]-t0+125
-        self.idvec[key]  = y[window]
-        ncellstims.append(np.max(self.idvec[key])+1)
-
-        print("Setting the connections")
-        self.set_CellStims_connections(ncellstims)
-
-        print("Creating dictionary with all parameters")
-        keys1 = self.weights_inputs_neurons.keys()
-        keys2 = ["idv", "spikes", "population", "synapses", "delays", "weights", "connectivity"]
-        self.external_inputs_data = dict.fromkeys(keys1)
-        for key in keys1:
-            if key.endswith("ca3"):
-                self.external_inputs_data[key] = dict.fromkeys(keys2)
-                inputs = key.split("_to_")[0]
-                po = self.__dict__[key.split("_to_")[1]]
-                self.external_inputs_data[key]["idv"]          = self.idvec[inputs]
-                self.external_inputs_data[key]["spikes"]       = self.tvec[inputs]
-                self.external_inputs_data[key]["population"]   = po
-                self.external_inputs_data[key]["synapses"]     = self.syn_inputs_neurons[key]
-                self.external_inputs_data[key]["delays"]       = self.delays_inputs_neurons[key]
-                self.external_inputs_data[key]["weights"]      = self.weights_inputs_neurons[key]
-                self.external_inputs_data[key]["connectivity"] = self.connectivity_inputs_neurons[key]
-
-            if self.create_ca1_network & key.endswith("ca1"):
-                self.external_inputs_data[key] = dict.fromkeys(keys2)
-                inputs = key.split("_to_")[0]
-                po = self.__dict__[key.split("_to_")[1]]
-                self.external_inputs_data[key]["idv"]          = self.idvec[inputs]
-                self.external_inputs_data[key]["spikes"]       = self.tvec[inputs]
-                self.external_inputs_data[key]["population"]   = po
-                self.external_inputs_data[key]["synapses"]     = self.syn_inputs_neurons[key]
-                self.external_inputs_data[key]["delays"]       = self.delays_inputs_neurons[key]
-                self.external_inputs_data[key]["weights"]      = self.weights_inputs_neurons[key]
-                self.external_inputs_data[key]["connectivity"] = self.connectivity_inputs_neurons[key]
+"""
