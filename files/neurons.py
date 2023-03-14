@@ -82,11 +82,9 @@ class Cell:
         #self.__dict__["all_current"].record(self.__dict__["soma"]._ref_i)
         for name in self.syn_list:
             if  "NMDA" not in name:
-                self.__dict__["i"+name] = h.Vector(int(h.tstop/h.dt)+1)
-                self.__dict__["i"+name].record( self.__dict__[name].syn._ref_i )
+                self.__dict__["i"+name] = h.Vector().record( self.__dict__[name].syn._ref_i,1.0)
             else: # iNMDA synapses consits of a sum of an AMPA and NMDA contributions. Why? don't know
-                self.__dict__["i"+name] = h.Vector(int(h.tstop/h.dt)+1)
-                self.__dict__["i"+name].record( self.__dict__[name].syn._ref_iNMDA )
+                self.__dict__["i"+name] = h.Vector().record( self.__dict__[name].syn._ref_iNMDA,1.0)
 
     def set_inj(self):
         self.somaInj = h.IClamp(0.5, sec=self.soma)
@@ -101,8 +99,7 @@ class Cell:
         self.sec_list.append(name)
         # Record voltage
         if rec:
-            self.__dict__[name+"_volt"] = h.Vector(int(h.tstop/h.dt)+1)
-            self.__dict__[name+"_volt"].record(self.__dict__[name](0.5)._ref_v)
+            self.__dict__[name+"_volt"] = h.Vector().record(self.__dict__[name](0.5)._ref_v,1.0)
 
     # def plot_volt(self, name, fig=1):
     #     figure(fig)
