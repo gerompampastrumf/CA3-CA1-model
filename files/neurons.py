@@ -56,6 +56,7 @@ class Cell:
         self.calc_area()
 
         self.spike_detector = h.NetCon(self.soma(0.5)._ref_v, None, sec=self.soma)
+        self.spike_detector.threshold = 0.0
         self.spike_times = h.Vector()
         self.spike_detector.record(self.spike_times)
         self.nc  = [] # connection between population src-> this cell
