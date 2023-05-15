@@ -628,7 +628,7 @@ if pc.id() == 0:
             data_ica["ca1"] = pd.DataFrame(data_ica["ca1"])
             for i in range(number_of_argvs):
                 value = inputs_argvs[i]
-                data_ica["ca1"][f"input{i+1}"] = []
+                # data_ica["ca1"][f"input{i+1}"] = []
                 data_ica["ca1"][column_labels[i]] =  [value]*len(data_ica["ca1"]) 
 
             title = f"ica_ca1_{argvs}.lzma"
