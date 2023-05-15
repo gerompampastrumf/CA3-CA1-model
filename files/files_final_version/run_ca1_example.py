@@ -500,7 +500,7 @@ if pc.id() == 0:
         print("Unifying the membrane potential data")
         #############################################
         data_volt = {}
-        all_volt  = dict.fromkeys(["pyr_ca3","bas_ca3","olm_ca3"])
+        all_volt  = dict.fromkeys(["pyr_ca1","bas_ca1","olm_ca1","cck_ca1"])
         keys = [] 
         for key in record_mp.keys():
             if record_mp[key] == True:
@@ -509,7 +509,7 @@ if pc.id() == 0:
         if keys: 
             all_volt["pyr_ca1"] = dict.fromkeys(keys)
             for key in keys:        
-                all_volt["pyr_ca1"][key] = unify_data(f"{key}_volt", cells=net.__dict__["pyr_ca3"].cell,nr=4)
+                all_volt["pyr_ca1"][key] = unify_data(f"{key}_volt", cells=net.__dict__["pyr_ca1"].cell,nr=4)
 
         data_volt["pyr_ca1"] = process_volt_data(all_volt["pyr_ca1"])
         for i in range(number_of_argvs): # add the input values
@@ -618,14 +618,14 @@ if pc.id() == 0:
         if record_lfp:
             # LFPsimpy is already implemented with the parallelization framework
             data_ica = {}
-            data_lfp["ca1"] = {"ica":[],"electrode":[],"component":[]}
+            data_ica["ca1"] = {"ica":[],"electrode":[],"component":[]}
             for i, lfp_ in enumerate(electrode["ca1"]):
                 for j,sublfp_ in enumerate(np.array(lfp_.values_per_section).T):
                     data_ica["ca1"]["ica"].extend( np.array(sublfp_) )
                     data_ica["ca1"]["electrode"].extend( [zcoords[i]]*len(sublfp_) )
                     data_ica["ca1"]["component"].extend( [zcoords[j]]*len(sublfp_) )
 
-            data_ica["ca1"] = pd.DataFDrame(data_ica["ca1"])
+            data_ica["ca1"] = pd.DataFrame(data_ica["ca1"])
             for i in range(number_of_argvs):
                 value = inputs_argvs[i]
                 data_ica["ca1"][f"input{i+1}"] = []
