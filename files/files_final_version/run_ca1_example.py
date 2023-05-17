@@ -22,7 +22,7 @@ import sys
 import os
 from neuron.units import ms, mV
 import time as tm
-#sys.path.append('/home/dimitrios/Neurons/CA1model/files/')
+sys.path.append('/home/dimitrios/Neurons/CA1model/final_files/')
 #from neurons import *
 from network_hippocampus_ca1 import *
 from measurements import *
@@ -41,7 +41,7 @@ inputs_argvs = []
 column_labels = []
 for argv in sys.argv[1:]:
     inputs_argvs.append(int(argv))
-
+print(len(inputs_argvs))
 if len(inputs_argvs) > 2:
     iseed  = inputs_argvs[0] 
     ibseed = inputs_argvs[1] 
@@ -96,7 +96,7 @@ else:
 
 h.dt = 0.1 # time resolution of the simulation
 h.celsius = 34.0 # temperature of the simulation
-simulation_time = 300.0 # total time of the simulation
+simulation_time = 30000.0 # total time of the simulation
 time_resolution = 2.0 # time resolution of the measurements
 
 DoMakeNoise = True # Control the external noise
@@ -104,17 +104,16 @@ MakeNetStim = True # Online generation of the background noise
 DoMakeExternalInputs = True # Control the external inputs
 MakeCellStim         = False # Online generation of the external inputs (False means loading the external inputs from a file)
 
-record_all_synapses = False # Record all the synapses
-record_lfp          = False # Record the LFP and transmembrane currents
+record_all_synapses = True # Record all the synapses
+record_lfp          = True # Record the LFP and transmembrane currents
 
 # synapses to be recorded
-synlist = [ "Adend3GABA_olm","Adend3AMPA_ec3360","Adend3NMDA_ec3360", "Adend3GABA_noise", "Adend3AMPA_noise",
-            "Adend2GABA_cck",
-            "Adend1AMPA_pyrCA3", "Adend1NMDA_pyrCA3",
-            "somaGABA_bas", "somaGABA_cck", "somaAMPA_noise", "somaGABA_noise"]
+synlist = ["somaAMPA_noise", "somaGABA_noise","Adend3AMPA_noise","Adend3GABA_noise",
+        "Adend3AMPA_ec3180","Adend3NMDA_ec3180","Adend3AMPA_ec3360","Adend3NMDA_ec3360", "Adend1AMPA_pyrCA3", "Adend1NMDA_pyrCA3",
+        "somaGABA_cck","Adend2GABA_cck","somaGABA_bas","Adend3GABA_olm","BdendAMPA_pyr","BdendNMDA_pyr"]
 
 # membrane potential to be recorded
-record_mp = {"Bdend": False, "soma": False, "Adend1": False, "Adend2": False, "Adend3": False}
+record_mp = {"Bdend": False, "soma": True, "Adend1": False, "Adend2": False, "Adend3": False}
 
 # what data to save (be consistent to what you record)
 save_data_volt   = True
@@ -127,8 +126,8 @@ save_data_ica    = True
 # folders for saving
 # output of ca3 will be stored in the same folder as the external inputs
 current_folder = os.getcwd()
-inputs_folder = '/home/jaime/Desktop/hippocampus/external_inputs/baseline/'
-save_folder = os.path.join(current_folder, "test_data")
+inputs_folder = '/home/dimitrios/Neurons/CA1model/baselineCA3/external_inputs'
+save_folder = os.path.join(current_folder, "baselineCA1")
 #save_folder   = '/home/jaime/Desktop/hippocampus/external_inputs/baseline/'
 # file_name = __file__
 # file_name = file_name.replace(current_folder,"") 
@@ -163,16 +162,19 @@ gain = np.linspace(0.0,1.5,21)# esta va con la conexion de abajo
 weights_neurons_neurons["pyr_ca1_to_bas_ca1"] = [[ gain[5]*2.341e-3, gain[5]*1.5*1.38e-3]]
 weights_neurons_neurons["pyr_ca1_to_olm_ca1"] = [[ 0.969e-3, 0.7e-3]] # [0.36e-3+scale*0.7e-3, 0.7e-3]
 weight_seq = np.linspace(0,2e-3,21)
-weights_neurons_neurons["pyr_ca1_to_cck_ca1"] = [[ 0.0*weight_seq[input2],0]] #[[0.10*weight_seq[5], 0.1*weight_seq[5]]] #[4.05e-3], [ 4.05e-3 ]] #[[cck_inhibition[input1]],[cck_inhibition[input1]]]#[
+
+weights_neurons_neurons["pyr_ca1_to_cck_ca1"] = [[ 0.0*weight_seq[0],0]] 
 gain = np.linspace(0.5,1,21)
 weights_neurons_neurons["bas_ca1_to_bas_ca1"] = [[ gain[10]*4.05e-3 ]] # initial value [[4.5e-3]]
 weight = np.linspace(0,4e-3,21)
 weights_neurons_neurons["bas_ca1_to_pyr_ca1"] = [[ 0.5*0.5*weight[10] ]] # initial [[0.576e-3]]
-weights_neurons_neurons["olm_ca1_to_pyr_ca1"] = [[ 57.6e-3 ]]  # [0.8*72.0e-3] #*0.9
+
+weights_neurons_neurons["olm_ca1_to_pyr_ca1"] = [[ 57.6e-3]]  # [0.8*72.0e-3] #*0.9
 
 cck_inhibition = 8*np.linspace(0,1,21)*4.05e-4
+cck_ca1 = np.linspace(0,2,11)[9]
 gain = np.linspace(0,4,21)
-weights_neurons_neurons["cck_ca1_to_pyr_ca1"] =  [[ cck_inhibition[10]], [cck_inhibition[10]]] #[[0.0],[0.0]] #[4.05e-3], [ 4.05e-3 ]] ##
+weights_neurons_neurons["cck_ca1_to_pyr_ca1"] =  [[ cck_inhibition[10]*cck_ca1], [cck_inhibition[10]*cck_ca1]] #[[0.0],[0.0]] #[4.05e-3], [ 4.05e-3 ]] ##
 
 weight = np.linspace(0,1e-3,21)
 weights_neurons_neurons["cck_ca1_to_cck_ca1"] = [[ weight[10] ]]
@@ -220,7 +222,8 @@ weights_inputs_neurons["ec3_180_to_pyr_ca1"] = [[ 0.0, 0.0 ]]
 #weights_inputs_neurons["ec3_180_to_bas_ca1"] = [[0.0,0.0]]
 #weights_inputs_neurons["ec3_180_to_cck_ca1"] = [[0.0,0.0]]
 gain = np.linspace(0,1,21)
-weights_inputs_neurons["ec3_360_to_cck_ca1"] = [[ 4*5*3.3e-4*gain[12], 1.8e-4*gain[12]]] #[[3.3e-4, ]]
+inp_cck = np.linspace(0,1,11)[5]
+weights_inputs_neurons["ec3_360_to_cck_ca1"] = [[ 4*5*3.3e-4*gain[12]*inp_cck, 1.8e-4*gain[12]*inp_cck]] #[[3.3e-4, ]]
 gain = np.linspace(0,1,21)
 weights_inputs_neurons["ec3_360_to_bas_ca1"] = [[ 0.5*3.3e-4, 0.5*1.8e-4]]
 weights_inputs_neurons["ec3_360_to_pyr_ca1"] = [[ 3.3e-4, 1.8e-4]] # [[2*3.3e-4, 2*1.8e-4]]#[[2*3.3e-4, 2*1.8e-4]]
@@ -235,13 +238,14 @@ delay_seq = np.linspace(2,8,21)
 
 weight_seq = np.linspace(0,0.23e-3,21)
 gain = np.linspace(0.25,0.5,21)
-weights_inputs_neurons["pyr_ca3_to_pyr_ca1"] =  [[ gain[10]*0.75*0.32e-3, 4*0.25*0.5*0.23e-3 ]]#[[ 0.25*0.32e-3, 0.25*0.5*0.23e-3]]#weight_seq[input1] ]] # [[ gain[input1]*1.44e-4, gain[input2]*0.6e-4 ]] #[[1.5*weight_seq[5], 1.5*weight_seq[5]/2.0 ]] #[[ 1.5*weight_seq[4], 1.5*weight_seq[4]/2.0 ]]  # to be optimize
+pyr_pyr = np.linspace(0,2,11)[4]
+weights_inputs_neurons["pyr_ca3_to_pyr_ca1"] =  [[ pyr_pyr*gain[10]*0.75*0.32e-3, pyr_pyr*4*0.25*0.5*0.23e-3 ]]
 
 weight_seq = np.linspace(0,0.4e-3,21)
 gain = np.linspace(0,2,21)
 weights_inputs_neurons["pyr_ca3_to_bas_ca1"] = [ [0.8*0.5*3.3e-4, 4*0.8*0.5*1.8e-4] ] #[[ 0.9e-4,  0.5e-4 ]]
 gain = np.linspace(0,2,21)
-weights_inputs_neurons["pyr_ca3_to_cck_ca1"] = [ [ 0.25*0.16e-3, 0.25*0.014e-3 ] ] # to be optimize
+weights_inputs_neurons["pyr_ca3_to_cck_ca1"] = [ [ 0.25*0.16e-3*inp_cck, 0.25*0.014e-3*inp_cck ] ] # to be optimize
 
 ncon = np.linspace(25,125,21).astype(int)
 nsyns_inputs_neurons["pyr_ca3_to_pyr_ca1"] = [ 100 ]  # theoretically 160 to be optimized
@@ -251,11 +255,10 @@ nsyns_inputs_neurons["pyr_ca3_to_cck_ca1"] = [ 100 ]  # theoretically 160, to be
 delay_seq = np.arange(2,23,1)
 delay_external = 10.0
 delay_CA3 = 5.0
-delay_CA3_seq = np.linspace(2,12,21)
 sigma_seq = np.linspace(0,20,21)
-delay_inputs_neurons["pyr_ca3_to_pyr_ca1"] = [ delay_CA3_seq[input1], 10.0 ]# [delay_seq[input2]]
-delay_inputs_neurons["pyr_ca3_to_bas_ca1"] = [ delay_CA3_seq[input1], 1.0 ]
-delay_inputs_neurons["pyr_ca3_to_cck_ca1"] = [ delay_CA3_seq[input1], 1.0 ]
+delay_inputs_neurons["pyr_ca3_to_pyr_ca1"] = [ delay_CA3, 10.0 ]# [delay_seq[input5]]
+delay_inputs_neurons["pyr_ca3_to_bas_ca1"] = [ delay_CA3, 1.0 ]
+delay_inputs_neurons["pyr_ca3_to_cck_ca1"] = [ delay_CA3, 1.0 ]
 
 delay_inputs_neurons["sep_360_to_olm_ca1"] = [ delay_external,1.0 ]
 delay_inputs_neurons["sep_180_to_bas_ca1"] = [ delay_external,1.0 ]
@@ -300,8 +303,10 @@ syn_inputs_neurons["pyr_ca3_to_cck_ca1"] = [["somaAMPA_pyrCA3", "somaNMDA_pyrCA3
 ###########################################################################'''
 weights_noise_neurons["bas_ca1"]["somaAMPA_noise"]   = 0.0125e-3
 gain = np.linspace(1,10,21)
-weights_noise_neurons["pyr_ca1"]["somaAMPA_noise"]   = 5*0.0125e-3
+nois_pyr = np.linspace(0,2,11)[6]
+weights_noise_neurons["pyr_ca1"]["somaAMPA_noise"]   = 5*0.0125e-3*nois_pyr
 weights_noise_neurons["pyr_ca1"]["Adend3AMPA_noise"] = 0.0125e-3
+
 
 ##############################################################################
 # remove the inhibition from the non-basket interneurons
@@ -322,19 +327,11 @@ weights_noise_neurons["pyr_ca1"]["Adend3AMPA_noise"] = 0.0125e-3
 #     for nc in net.burst_basal_ncl_:
 #         nc.weight[0] = 0.0
 
-'''###########################################################################
-                           saving the currents
-###########################################################################'''
-
-synlist = [ "Adend3GABA_olm","Adend3AMPA_ec3360","Adend3NMDA_ec3360", "Adend3GABA_noise", "Adend3AMPA_noise",
-             "Adend2GABA_cck",
-             "Adend1AMPA_pyrCA3", "Adend1NMDA_pyrCA3",
-             "somaGABA_bas", "somaGABA_cck", "somaAMPA_noise", "somaGABA_noise"]
 
 '''############################################################################
                                 The network
 #############################################################################'''
-record_mp = {"soma":False,"Bdend": False, "Adend1":False, "Adend2":False, "Adend3":False}
+
 net = Network( weights_inputs_neurons  = weights_inputs_neurons,
                nsyns_inputs_neurons    = nsyns_inputs_neurons,
                syn_inputs_neurons      = syn_inputs_neurons,
@@ -453,7 +450,7 @@ if record_all_synapses:
     # this record only the specific synapses in the ca3 pyramidal cells
     # there is a function called record_all_synapses() in the net class that record all synapses in the network
     # but the synlist should be provided first to the neurons.
-    for cell in net.pyr_ca3.cell:
+    for cell in net.pyr_ca1.cell:
         cell.syn_list = synlist
         cell.record_synapses()
 
@@ -505,9 +502,14 @@ if pc.id() == 0:
         for key in record_mp.keys():
             if record_mp[key] == True:
                 keys.append(key)
-
+        #print("CELLS",net.__dict__["pyr_ca1"].cell)
         if keys: 
             all_volt["pyr_ca1"] = dict.fromkeys(keys)
+            for key in keys:
+                print("KEY",f"{key}_volt")
+                all_volt["pyr_ca1"][key] = unify_data(f"{key}_volt", cells=net.__dict__["pyr_ca1"].cell,nr=4)
+        #print(all_volt["pyr_ca1"].keys(),len(all_volt["pyr_ca1"][all_volt["pyr_ca1"].keys()[0]]))
+        
             for key in keys:        
                 all_volt["pyr_ca1"][key] = unify_data(f"{key}_volt", cells=net.__dict__["pyr_ca1"].cell,nr=4)
 
@@ -516,12 +518,13 @@ if pc.id() == 0:
             value = inputs_argvs[i]
             data_volt["pyr_ca1"][column_labels[i]] = [value]*len(data_volt["pyr_ca1"])
 
-        title = f"volt_pyramidal_ca1_{argvs}.lzma"
+        title = f"volt_pyr_ca1_{argvs}.lzma"
         file_management.save_lzma( data_volt["pyr_ca1"], title, parent_dir = save_folder)
 
         if record_mp["soma"] == True:
             all_volt["bas_ca1"] = dict.fromkeys(["soma"])
             all_volt["olm_ca1"] = dict.fromkeys(["soma"])
+            all_volt["cck_ca1"] = dict.fromkeys(["soma"])
             all_volt["bas_ca1"]["soma"] = unify_data("soma_volt", cells=net.__dict__["bas_ca1"].cell,nr=4)
             all_volt["olm_ca1"]["soma"] = unify_data("soma_volt", cells=net.__dict__["olm_ca1"].cell,nr=4)
             all_volt["cck_ca1"]["soma"] = unify_data("soma_volt", cells=net.__dict__["cck_ca1"].cell,nr=4)
@@ -547,7 +550,7 @@ if pc.id() == 0:
         ################################
         print("Unifying the spike data")
         ################################
-        all_spikes = dict.fromkeys(["pyr_ca3","bas_ca3","olm_ca3"])
+        all_spikes = dict.fromkeys(["pyr_ca1","bas_ca1","olm_ca1","cck_ca1"])
         data_spikes = {} 
 
         all_spikes["pyr_ca1"] = unify_data("spike_times", net.__dict__["pyr_ca1"].cell)
@@ -589,7 +592,7 @@ if pc.id() == 0:
             data_syn["ca1"] = {}
             data_syn["ca1"] = process_syn_data( all_syn["ca1"] )
 
-            for i in range(len(sys.argv)+1): # adding the input values
+            for i in range(number_of_argvs): # adding the input values
                 value = inputs_argvs[i]
                 data_syn["ca1"][column_labels[i]] = [value]*len(data_syn["ca1"])
             

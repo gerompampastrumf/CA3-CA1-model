@@ -77,7 +77,7 @@ class LfpElectrode:
 
         if not h.cvode.use_fast_imem():
             h.cvode.use_fast_imem(1)
-            h.init()
+            #h.init()
 
         if self.method == 'Point':
             LfpClass = SectionLfpPointMethod
