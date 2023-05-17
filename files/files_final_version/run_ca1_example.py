@@ -510,6 +510,9 @@ if pc.id() == 0:
                 all_volt["pyr_ca1"][key] = unify_data(f"{key}_volt", cells=net.__dict__["pyr_ca1"].cell,nr=4)
         #print(all_volt["pyr_ca1"].keys(),len(all_volt["pyr_ca1"][all_volt["pyr_ca1"].keys()[0]]))
         
+            for key in keys:        
+                all_volt["pyr_ca1"][key] = unify_data(f"{key}_volt", cells=net.__dict__["pyr_ca1"].cell,nr=4)
+
         data_volt["pyr_ca1"] = process_volt_data(all_volt["pyr_ca1"])
         for i in range(number_of_argvs): # add the input values
             value = inputs_argvs[i]
@@ -628,6 +631,7 @@ if pc.id() == 0:
             data_ica["ca1"] = pd.DataFrame(data_ica["ca1"])
             for i in range(number_of_argvs):
                 value = inputs_argvs[i]
+                # data_ica["ca1"][f"input{i+1}"] = []
                 data_ica["ca1"][column_labels[i]] =  [value]*len(data_ica["ca1"]) 
 
             title = f"ica_ca1_{argvs}.lzma"
