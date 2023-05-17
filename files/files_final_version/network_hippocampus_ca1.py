@@ -491,7 +491,7 @@ class Network:
             x = np.array( data["tvec"][data["iseed"] == self.external_inputs_iseed].values )
             y = np.array( data["idvec"][data["iseed"]== self.external_inputs_iseed].values )
             window = np.logical_and(x>=t0,x<=tf)
-            self.tvec[key]   = x[window]-t0 + 125.0 # This I do not remember 
+            self.tvec[key]   = x[window]-t0 + 125.0 
             self.idvec[key]  = y[window]
             # ncellstims.append(np.max(self.idvec[key])+1)
             ncellstims.append( np.max(y)+1 )
@@ -503,7 +503,7 @@ class Network:
         x = np.array( data["tvec"][w].values )
         y = np.array( data["idvec"][w].values )
         window = np.logical_and(x>=t0,x<=tf)
-        self.tvec[key]   = x[window]-t0 #+125.0 # This I do not remember 
+        self.tvec[key]   = x[window]-t0 +125.0 # I do remember
         self.idvec[key]  = y[window]
         # ncellstims.append(np.max(self.idvec[key])+1)
         ncellstims.append( np.max(y)+1 )
