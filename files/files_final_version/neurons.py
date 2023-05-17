@@ -501,81 +501,7 @@ class PyrAdr_CA1(Cell):
         #                 'somaAMPAf','somaGABAf','somaGABAfb','BdendAMPAf','BdendNMDA']
 
 ###############################################################################
-class Cck_cell(Cell):  # the correct one!!
-    name = "CCK-expressing cell"
-    def set_label(self):
-        self.label = "cck"
-
-    def set_morphology(self):
-        # punctual neuron
-        total_area = 10000
-        self.soma.nseg = self.nseg
-        self.soma.cm = 1.1
-        diam = np.sqrt(total_area) # um
-        L  = diam/np.pi  # um
-
-        #diam = 10
-        #L = 20
-        h.pt3dclear(sec=self.soma)
-        h.pt3dadd(self.x, self.y, self.z,   diam, sec=self.soma)
-        h.pt3dadd(self.x, self.y, self.z+L, diam, sec=self.soma)
-
-    def set_conductances(self):
-        self.soma.Ra = 100 # 150
-
-        self.soma.insert("ichan2cck")
-        self.soma.insert("ccanl")    # Ca2+ pump
-        self.soma.insert("borgka")
-        self.soma.insert("nca")      # N-type Ca2+ conductance
-        self.soma.insert("lca")      # L-type Ca2+ conducante
-        self.soma.insert("gskch")    # Ca2+ dependent K (SK) conducance
-        self.soma.insert("mykca")    # Ca2+ and voltage dependent k+ (BK) conductance
-        self.soma.insert("Ih")
-        self.soma.insert("constant")
-        self.soma.cao = 2
-        self.soma.cai = 1e-5
-
-        self.soma.ek = -85
-        self.soma.ena = 55
-        self.soma.eca = 130
-        self.soma.eh = -40
-
-        self.soma(0.5).ichan2cck.gnabar = 0.188*0.9*1.2
-        self.soma(0.5).ichan2cck.gkbar  = 0.013*0.85*1.2
-        self.soma(0.5).ichan2cck.gl     = 0.00006*0.6*1.027
-        self.soma(0.5).ichan2cck.el     = -70.0
-        self.soma(0.5).borgka.gkabar    = 0.0006
-        #self.soma(0.5).borgka.ek       = -85.0
-        self.soma(0.5).nca.gncabar      = 0.0000016 # check to modify- original 0.004
-        self.soma(0.5).lca.glcabar      = 0.000025
-        self.soma(0.5).gskch.gskbar     = 0.0004
-        self.soma(0.5).mykca.gkbar      = 0.072
-        self.soma(0.5).Ih.gkhbar        = 0.000025
-        self.soma(0.5).Ih.alpha         = 100
-        self.soma(0.5).Ih.slope         = 10
-        self.soma(0.5).Ih.amp           = 0.01
-        self.soma(0.5).Ih.taumin        = 20
-        self.soma(0.5).constant.ic      = 0#-0.00455
-
-    def set_synapses(self):
-        # external noise 
-        self.somaAMPA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)   
-        self.somaGABA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
-        # external inputs 
-        self.somaAMPA_ec3180   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)                                         # not initially used
-        self.somaNMDA_ec3180   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)  # not initially used
-        self.somaAMPA_ec3360   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
-        self.somaNMDA_ec3360   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
-        self.somaAMPA_pyrCA3   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
-        self.somaNMDA_pyrCA3   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
-        self.somaGABA_sep180   = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
-        self.somaGABA_sep360   = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
-        # connections
-        self.somaAMPA_pyr      = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0)
-        self.somaNMDA_pyr      = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
-        self.somaGABA_cck      = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
-
-# class Cck_cell(Cell): # the previous version 
+# class Cck_cell(Cell):  # the previous one !!
 #     name = "CCK-expressing cell"
 #     def set_label(self):
 #         self.label = "cck"
@@ -595,7 +521,7 @@ class Cck_cell(Cell):  # the correct one!!
 #         h.pt3dadd(self.x, self.y, self.z+L, diam, sec=self.soma)
 
 #     def set_conductances(self):
-#         self.soma.Ra = 100#150
+#         self.soma.Ra = 100 # 150
 
 #         self.soma.insert("ichan2cck")
 #         self.soma.insert("ccanl")    # Ca2+ pump
@@ -613,11 +539,9 @@ class Cck_cell(Cell):  # the correct one!!
 #         self.soma.ena = 55
 #         self.soma.eca = 130
 #         self.soma.eh = -40
-        
-#         # new parameters in the new reduction
-#         # if you want to reproduce previous results, please use the previous values 
-#         self.soma(0.5).ichan2cck.gnabar = 5.82722712*1e-2 #0.188*0.9*1.2 
-#         self.soma(0.5).ichan2cck.gkbar  = 4.84406334*1e-02 #0.013*0.85*1.2
+
+#         self.soma(0.5).ichan2cck.gnabar = 0.188*0.9*1.2
+#         self.soma(0.5).ichan2cck.gkbar  = 0.013*0.85*1.2
 #         self.soma(0.5).ichan2cck.gl     = 0.00006*0.6*1.027
 #         self.soma(0.5).ichan2cck.el     = -70.0
 #         self.soma(0.5).borgka.gkabar    = 0.0006
@@ -650,6 +574,82 @@ class Cck_cell(Cell):  # the correct one!!
 #         self.somaAMPA_pyr      = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0)
 #         self.somaNMDA_pyr      = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
 #         self.somaGABA_cck      = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+
+class Cck_cell(Cell): # the correct one!!
+    name = "CCK-expressing cell"
+    def set_label(self):
+        self.label = "cck"
+
+    def set_morphology(self):
+        # punctual neuron
+        total_area = 10000
+        self.soma.nseg = self.nseg
+        self.soma.cm = 1.1
+        diam = np.sqrt(total_area) # um
+        L  = diam/np.pi  # um
+
+        #diam = 10
+        #L = 20
+        h.pt3dclear(sec=self.soma)
+        h.pt3dadd(self.x, self.y, self.z,   diam, sec=self.soma)
+        h.pt3dadd(self.x, self.y, self.z+L, diam, sec=self.soma)
+
+    def set_conductances(self):
+        self.soma.Ra = 100#150
+
+        self.soma.insert("ichan2cck")
+        self.soma.insert("ccanl")    # Ca2+ pump
+        self.soma.insert("borgka")
+        self.soma.insert("nca")      # N-type Ca2+ conductance
+        self.soma.insert("lca")      # L-type Ca2+ conducante
+        self.soma.insert("gskch")    # Ca2+ dependent K (SK) conducance
+        self.soma.insert("mykca")    # Ca2+ and voltage dependent k+ (BK) conductance
+        self.soma.insert("Ih")
+        self.soma.insert("constant")
+        self.soma.cao = 2
+        self.soma.cai = 1e-5
+
+        self.soma.ek = -85
+        self.soma.ena = 55
+        self.soma.eca = 130
+        self.soma.eh = -40
+        
+        # new parameters in the new reduction
+        # if you want to reproduce previous results, please use the previous values 
+        self.soma(0.5).ichan2cck.gnabar = 5.82722712*1e-2 #0.188*0.9*1.2 
+        self.soma(0.5).ichan2cck.gkbar  = 4.84406334*1e-02 #0.013*0.85*1.2
+        self.soma(0.5).ichan2cck.gl     = 0.00006*0.6*1.027
+        self.soma(0.5).ichan2cck.el     = -70.0
+        self.soma(0.5).borgka.gkabar    = 0.0006
+        #self.soma(0.5).borgka.ek       = -85.0
+        self.soma(0.5).nca.gncabar      = 0.0000016 # check to modify- original 0.004
+        self.soma(0.5).lca.glcabar      = 0.000025
+        self.soma(0.5).gskch.gskbar     = 0.0004
+        self.soma(0.5).mykca.gkbar      = 0.072
+        self.soma(0.5).Ih.gkhbar        = 0.000025
+        self.soma(0.5).Ih.alpha         = 100
+        self.soma(0.5).Ih.slope         = 10
+        self.soma(0.5).Ih.amp           = 0.01
+        self.soma(0.5).Ih.taumin        = 20
+        self.soma(0.5).constant.ic      = 0#-0.00455
+
+    def set_synapses(self):
+        # external noise 
+        self.somaAMPA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)   
+        self.somaGABA_noise    = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        # external inputs 
+        self.somaAMPA_ec3180   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)                                         # not initially used
+        self.somaNMDA_ec3180   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)  # not initially used
+        self.somaAMPA_ec3360   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.somaNMDA_ec3360   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaAMPA_pyrCA3   = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3,  e=0)
+        self.somaNMDA_pyrCA3   = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaGABA_sep180   = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        self.somaGABA_sep360   = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
+        # connections
+        self.somaAMPA_pyr      = Synapse(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, e=0)
+        self.somaNMDA_pyr      = SynapseNMDA(sect=self.soma, loc=0.5, tau1=0.05, tau2=5.3, tau1NMDA=15.0, tau2NMDA=150.0, r=1, e=0)
+        self.somaGABA_cck      = Synapse(sect=self.soma, loc=0.5, tau1=0.07, tau2=9.1,  e=-80) 
           
 
 class Cck_spyros_modified(Cell):
