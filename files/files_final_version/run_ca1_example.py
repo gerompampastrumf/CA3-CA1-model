@@ -156,6 +156,7 @@ def unify_data(variable, cells, nr=1):
 '''###########################################################################
                     Neurons to neurons projections
 ###########################################################################'''
+
 # weights
 gain2 = np.linspace(0,2,21)
 gain = np.linspace(0.0,1.5,21)# esta va con la conexion de abajo 
@@ -327,7 +328,15 @@ weights_noise_neurons["pyr_ca1"]["Adend3AMPA_noise"] = 0.0125e-3
 #     for nc in net.burst_basal_ncl_:
 #         nc.weight[0] = 0.0
 
-
+print("weights_neurons_neurons ",weights_neurons_neurons)
+print("nsyns_neurons_neurons ",nsyns_neurons_neurons)
+print("syn_neurons_neurons ",syn_neurons_neurons)
+print("delay_neurons_neurons ",delay_neurons_neurons)
+print("weights_inputs_neurons ",weights_inputs_neurons)
+print("nsyns_inputs_neurons ",nsyns_inputs_neurons)
+print("syn_inputs_neurons ",syn_inputs_neurons)
+print("delay_inputs_neurons ",delay_inputs_neurons)
+print("weights_noise_neurons ",weights_noise_neurons)
 '''############################################################################
                                 The network
 #############################################################################'''
@@ -364,21 +373,17 @@ net = Network( weights_inputs_neurons  = weights_inputs_neurons,
 
 tau2seq = np.linspace(1,5,21)
 tauNMDAseq = np.linspace(15,40,21)
-
 for cell in net.cck_ca1.cell:
     cell.somaInj.amp = 32.5*1e-3 # fixed 15/11
 for cell in net.pyr_ca1.cell:
     cell.Adend3GABA_olm.syn.tau2 = 20.0
-# for cell in net.pyr_ca1.cell: # la putada es que aqui estoy cambiando tambien las sinapsis de las basket. 
-#     # habria que usar el fichero de github
-#     cell.Adend2GABA_cck.syn.tau2 = tau2seq[input1]
-#     cell.somaGABA_cck.syn.tau2   = tau2seq[input1]
+
 for cell in net.cck_ca1.cell: 
-    cell.somaAMPA_ec3360.syn.tau2 = 2.5#tau2seq[input1]
+    cell.somaAMPA_ec3360.syn.tau2 = 2.5#tau2seq[input4]
 for cell in net.pyr_ca1.cell: 
-    cell.Adend1NMDA_pyrCA3.syn.tau1NMDA = 15#tauNMDAseq[input1]
-    cell.Adend2GABA_cck.syn.tau2 = 4.0#tau2seq[input1]
-    cell.somaGABA_cck.syn.tau2   = 4.0#tau2seq[input1]
+    cell.Adend1NMDA_pyrCA3.syn.tau1NMDA = 15#tauNMDAseq[input4]
+    cell.Adend2GABA_cck.syn.tau2 = 4.0#tau2seq[input4]
+    cell.somaGABA_cck.syn.tau2   = 4.0#tau2seq[input4]
     
 # modification of the threshold of the cck 
 for cell in net.cck_ca1.cell: 
@@ -463,7 +468,7 @@ if record_lfp:
     electrode["ca1"] = [ ]
 
     for i,z in enumerate(zcoords):
-        electrode["ca1"].append( LfpElectrode(x=25.0, y=25.0, z=z, sampling_period=1, neuron_type = "Pyramidal CA3"))
+        electrode["ca1"].append( LfpElectrode(x=25.0, y=25.0, z=z, sampling_period=time_resolution, neuron_type = "Pyramidal CA3"))
 
 # h.tstop = simulation_time
 # h.stdinit()
@@ -510,9 +515,6 @@ if pc.id() == 0:
                 all_volt["pyr_ca1"][key] = unify_data(f"{key}_volt", cells=net.__dict__["pyr_ca1"].cell,nr=4)
         #print(all_volt["pyr_ca1"].keys(),len(all_volt["pyr_ca1"][all_volt["pyr_ca1"].keys()[0]]))
         
-            for key in keys:        
-                all_volt["pyr_ca1"][key] = unify_data(f"{key}_volt", cells=net.__dict__["pyr_ca1"].cell,nr=4)
-
         data_volt["pyr_ca1"] = process_volt_data(all_volt["pyr_ca1"])
         for i in range(number_of_argvs): # add the input values
             value = inputs_argvs[i]
@@ -577,6 +579,7 @@ if pc.id() == 0:
         title = f"spikes_olm_ca1_{argvs}.lzma"
         file_management.save_lzma( data_spikes["olm_ca1"], title, parent_dir = save_folder)
         title = f"spikes_cck_ca1_{argvs}.lzma"
+        file_management.save_lzma( data_spikes["cck_ca1"], title, parent_dir = save_folder)
 
     if save_data_syn:
         if record_all_synapses:
@@ -626,12 +629,11 @@ if pc.id() == 0:
                 for j,sublfp_ in enumerate(np.array(lfp_.values_per_section).T):
                     data_ica["ca1"]["ica"].extend( np.array(sublfp_) )
                     data_ica["ca1"]["electrode"].extend( [zcoords[i]]*len(sublfp_) )
-                    data_ica["ca1"]["component"].extend( [zcoords[j]]*len(sublfp_) )
+                    data_ica["ca1"]["component"].extend( [["Bdend","soma","Adend1","Adend2","Adend3"][j]]*len(sublfp_) )
 
             data_ica["ca1"] = pd.DataFrame(data_ica["ca1"])
             for i in range(number_of_argvs):
                 value = inputs_argvs[i]
-                # data_ica["ca1"][f"input{i+1}"] = []
                 data_ica["ca1"][column_labels[i]] =  [value]*len(data_ica["ca1"]) 
 
             title = f"ica_ca1_{argvs}.lzma"

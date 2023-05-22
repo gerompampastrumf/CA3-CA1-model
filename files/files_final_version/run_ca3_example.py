@@ -10,7 +10,7 @@ import sys
 import os
 from neuron.units import ms, mV
 import time as tm
-#sys.path.append('/home/dimitrios/Neurons/CA1model/files/')
+sys.path.append('/home/dimitrios/Neurons/CA1model/final_files/')
 #from neurons import *
 from network_hippocampus_ca3 import *
 from measurements import *
@@ -82,10 +82,10 @@ record_all_synapses = True # Record all the synapses
 record_lfp          = True # Record the LFP and transmembrane currents
 
 # synapses to be recorded
-synlist = [ "Adend3GABA_olm","Adend3AMPA_ec3360","Adend3NMDA_ec3360", "Adend3GABA_noise", "Adend3AMPA_noise",
-            "Adend2GABA_cck",
-            "Adend1AMPA_pyrCA3", "Adend1NMDA_pyrCA3",
-            "somaGABA_bas", "somaGABA_cck", "somaAMPA_noise", "somaGABA_noise"]
+synlist = [ "Adend3GABA_olm","Adend3AMPA_ec2360","Adend3NMDA_ec2360", "Adend3GABA_noise", "Adend3AMPA_noise","Adend3AMPA_ec2180","Adend3NMDA_ec2180",
+            "Adend1AMPA_dgreg", "Adend1NMDA_dgreg","Adend1AMPA_dgburst","Adend1NMDA_dgburst",
+            "somaGABA_bas", "somaAMPA_noise", "somaGABA_noise",
+            "BdendAMPA_pyr","BdendNMDA_pyr"]
 
 # membrane potential to be recorded
 record_mp = {"Bdend": False, "soma": True, "Adend1": False, "Adend2": False, "Adend3": False}
@@ -101,8 +101,8 @@ save_data_ica    = True
 # folders for saving
 # output of ca3 will be stored in the same folder as the external inputs
 current_folder = os.getcwd()
-inputs_folder = '/home/jaime/Desktop/hippocampus/external_inputs/baseline/'
-save_folder   = '/home/jaime/Desktop/hippocampus/external_inputs/baseline/'
+inputs_folder = '/home/dimitrios/Neurons/CA1model/baselineCA3/external_inputs'
+save_folder   = '/home/dimitrios/Neurons/CA1model/baselineCA3/'
 #save_folder = os.path.join(current_folder,"test_data")
 
 # file_name = __file__
@@ -560,7 +560,7 @@ if pc.id() == 0:
                     for j,sublfp_ in enumerate(np.array(lfp_.values_per_section).T):
                         data_ica["ca1"]["ica"].extend( np.array(sublfp_) )
                         data_ica["ca1"]["electrode"].extend( [zcoords[i]]*len(sublfp_) )
-                        data_ica["ca1"]["component"].extend( [zcoords[j]]*len(sublfp_) )
+                        data_ica["ca1"]["component"].extend( [["Bdend","soma","Adend1","Adend2","Adend3"][j]]*len(sublfp_) )
 
                 data_ica["ca1"] = pd.DataFDrame(data_ica["ca1"])
                 for i in range(number_of_argvs):
