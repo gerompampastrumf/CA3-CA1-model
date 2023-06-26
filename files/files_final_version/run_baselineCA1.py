@@ -27,7 +27,7 @@ sys.path.append('/home/dimitrios/Neurons/CA1model/final_files/')
 from network_hippocampus_ca1 import *
 from measurements import *
 from LFPsimpy import LfpElectrode
-from parameters import *
+from parameters_alt import *
 import file_management
 from functions import *
 
@@ -127,12 +127,11 @@ save_data_ica    = True
 # output of ca3 will be stored in the same folder as the external inputs
 current_folder = os.getcwd()
 inputs_folder = '/home/dimitrios/Neurons/CA1model/baselineCA3/external_inputs'
-save_folder = os.path.join(current_folder, "baselineCA1")
-#save_folder   = '/home/jaime/Desktop/hippocampus/external_inputs/baseline/'
-# file_name = __file__
-# file_name = file_name.replace(current_folder,"") 
-# file_name = file_name.split('_')[-1][:-3] 
-# save_dir = os.path.join(current_folder, file_name)
+
+file_name = __file__
+file_name = file_name.replace(current_folder,"") 
+file_name = file_name.split('_')[-1][:-3] 
+save_folder = os.path.join(current_folder, file_name)
 
 def unify_data(variable, cells, nr=1):
     f''' unify data from all cells in the network: membrane voltage, synaptic currents, spikes, etc '''
@@ -257,7 +256,7 @@ delay_seq = np.arange(2,23,1)
 delay_external = 10.0
 delay_CA3 = 5.0
 sigma_seq = np.linspace(0,20,21)
-delay_inputs_neurons["pyr_ca3_to_pyr_ca1"] = [ delay_CA3, 10.0 ]# [delay_seq[input5]]
+delay_inputs_neurons["pyr_ca3_to_pyr_ca1"] = [ delay_CA3, 1.0 ]# [delay_seq[input5]]
 delay_inputs_neurons["pyr_ca3_to_bas_ca1"] = [ delay_CA3, 1.0 ]
 delay_inputs_neurons["pyr_ca3_to_cck_ca1"] = [ delay_CA3, 1.0 ]
 
@@ -328,15 +327,7 @@ weights_noise_neurons["pyr_ca1"]["Adend3AMPA_noise"] = 0.0125e-3
 #     for nc in net.burst_basal_ncl_:
 #         nc.weight[0] = 0.0
 
-print("weights_neurons_neurons ",weights_neurons_neurons)
-print("nsyns_neurons_neurons ",nsyns_neurons_neurons)
-print("syn_neurons_neurons ",syn_neurons_neurons)
-print("delay_neurons_neurons ",delay_neurons_neurons)
-print("weights_inputs_neurons ",weights_inputs_neurons)
-print("nsyns_inputs_neurons ",nsyns_inputs_neurons)
-print("syn_inputs_neurons ",syn_inputs_neurons)
-print("delay_inputs_neurons ",delay_inputs_neurons)
-print("weights_noise_neurons ",weights_noise_neurons)
+
 '''############################################################################
                                 The network
 #############################################################################'''
@@ -371,6 +362,16 @@ net = Network( weights_inputs_neurons  = weights_inputs_neurons,
                record_mp = record_mp,
                resolution = time_resolution)
 
+print("weights_neurons_neurons_b= ",net.weights_neurons_neurons)
+print("nsyns_neurons_neurons_b= ",net.nsyns_neurons_neurons)
+print("syn_neurons_neurons_b= ",net.syn_neurons_neurons)
+print("delay_neurons_neurons_b= ",net.delay_neurons_neurons)
+print("weights_inputs_neurons_b= ",net.weights_inputs_neurons)
+print("nsyns_inputs_neurons_b= ",net.nsyns_inputs_neurons)
+print("syn_inputs_neurons_b= ",net.syn_inputs_neurons)
+print("delay_inputs_neurons_b= ",net.delay_inputs_neurons)
+print("weights_noise_neurons_b= ",net.weights_noise_neurons)
+
 tau2seq = np.linspace(1,5,21)
 tauNMDAseq = np.linspace(15,40,21)
 for cell in net.cck_ca1.cell:
@@ -391,11 +392,13 @@ for cell in net.cck_ca1.cell:
 
 if net.DoMakeNoise:
     if net.MakeNetStim:
+        print("set_noise_inputs,init_NetStims")
         net.set_noise_inputs(simulation_time) # set background noise and external input
         net.init_NetStims()  # init rngs of background
 
 if net.DoMakeExternalInputs:
     if net.MakeCellStim:
+        print("init_CellStims")
         net.init_CellStims() # init rngs of external inputs
 
 '''###########################################################################
@@ -411,13 +414,25 @@ if net.DoMakeExternalInputs:
     for key in net.external_inputs_data.keys():
         if key.endswith("ca1"):
             idv      = net.external_inputs_data[key]["idv"]
-            spikes   = net.external_inputs_data[key]["spikes"]
+            spikes   = net.external_inputs_data[key]["spikes"].copy()
             trg      = net.external_inputs_data[key]["population"]
             syn_list = net.external_inputs_data[key]["synapses"]
             delays   = net.external_inputs_data[key]["delays"]
             w_list   = net.external_inputs_data[key]["weights"]
             conn     = net.external_inputs_data[key]["connectivity"]
+
             if key.startswith("ec3_360"): # "quick solution to make cck spike before"
+                print("-10ms applied at ec360")
+                spikes -= 10
+            """plt.figure()
+            t = spikes[spikes<500]
+            plt.hist(t,bins=np.arange(0,500,2),label=key)
+            plt.legend()
+            plt.xlim([20,200])
+            plt.savefig(key+"test2.png")"""
+
+            if key.startswith("ec3_360"): # "quick solution to make cck spike before"
+                print("-10ms applied at ec360")
                 spikes -= 10
             for k,conn_ in enumerate(conn):
                 for post_id, all_pre in enumerate(conn_):

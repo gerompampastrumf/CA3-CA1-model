@@ -4,7 +4,7 @@
 time_initial = 50
 theta_rythm = 125 
 
-inputs = ["baseline","ec2_faster_1","ec2_faster_2","ec3_faster_1","ec3_faster_2"]
+inputs = ["baseline","ec2_faster_1","ec2_faster_2","ec3_faster_1","ec3_faster_2","ec_slower"]
 labels = ['sep_180', 'sep_360', 'ec2_180', 'ec2_360', 'ec3_180','ec3_360','dg_regular', 'dg_burst']
 params = ["time_start", "ncells", "sigma","period"]
           
@@ -143,6 +143,26 @@ inputs_params["ec3_faster_2"]["dg_burst"]["period"]   = theta_rythm
 
 ##########################################################################################
 
+# EC with lower  frequency -0.25 Hz
+inputs_params["ec_slower"]["sep_180"]["time_start"]    = time_initial+theta_rythm/2.0
+inputs_params["ec_slower"]["sep_360"]["time_start"]    = time_initial
+inputs_params["ec_slower"]["ec2_180"]["time_start"]    = time_initial+theta_rythm/2.0
+inputs_params["ec_slower"]["ec2_360"]["time_start"]    = time_initial
+inputs_params["ec_slower"]["ec3_180"]["time_start"]    = time_initial+theta_rythm/2.0
+inputs_params["ec_slower"]["ec3_360"]["time_start"]    = time_initial
+inputs_params["ec_slower"]["dg_regular"]["time_start"] = time_initial+0.375*theta_rythm
+inputs_params["ec_slower"]["dg_burst"]["time_start"]   = time_initial+0.125*theta_rythm
+
+inputs_params["ec_slower"]["sep_180"]["period"]    = theta_rythm
+inputs_params["ec_slower"]["sep_360"]["period"]    = theta_rythm
+inputs_params["ec_slower"]["ec2_180"]["period"]    = 129.0
+inputs_params["ec_slower"]["ec2_360"]["period"]    = 129.0
+inputs_params["ec_slower"]["ec3_180"]["period"]    = 129.0
+inputs_params["ec_slower"]["ec3_360"]["period"]    = 129.0
+inputs_params["ec_slower"]["dg_regular"]["period"] = theta_rythm
+inputs_params["ec_slower"]["dg_burst"]["period"]   = theta_rythm
+
+#############################################################################################
 # EC2 shifted 
 inputs_ec2 = [f"ec2_shifted_{i}" for i in range(1,len(phase_shift)+1)]
 for i,keys in enumerate(inputs_ec2):
@@ -186,6 +206,8 @@ for i,keys in enumerate(inputs_dg):
     inputs_params[keys]["dg_regular"]["period"] = theta_rythm
     inputs_params[keys]["dg_burst"]["period"]   = theta_rythm
 ##########################################################################################
+
+
 
 # future: DG regular and burst
 

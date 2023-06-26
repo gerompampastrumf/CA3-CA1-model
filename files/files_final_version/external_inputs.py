@@ -13,7 +13,7 @@ import pandas as pd
 from inputs_parameters import *
 import sys
 import os
-#sys.path.append("/home/jaime/Desktop/hippocampus/files")
+sys.path.append('/home/dimitrios/Neurons/CA1model/final_files/')
 import file_management
 
 input1 = int(sys.argv[1]) # select the input category: baseline, ec2_faster_1, etc
@@ -82,7 +82,7 @@ def dg_burst_inputs(sead,time_simulation, time_initial, sigma, period, ncells, p
     return sead, idv, spikes
 
 # inputs path (do not forget to modify)
-inputs_path = os.path.join( "/home/jaime/Desktop/hippocampus/external_inputs/", input_type)
+inputs_path = os.path.join( "/home/dimitrios/Neurons/CA1model/ECfasterCA3/external_inputs", input_type)
 
 ncells_per_label = [ inputs_params[input_type][lb]["ncells"] for lb in labels ]
 ncells_total = np.sum(ncells_per_label)
