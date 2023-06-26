@@ -158,26 +158,27 @@ syn_inputs_neurons["ec3_360_to_bas_ca1"] = [["somaAMPA_ec3360","somaNMDA_ec3360"
 syn_inputs_neurons["ec3_360_to_cck_ca1"] = [["somaAMPA_ec3360","somaNMDA_ec3360"]]           # [["somaAMPAf", "somaNMDA"]]
 
 # to CA3 # added in 15/11
-delay_inputs_neurons["sep_180_to_bas_ca3"] = [2.0,1.0]
-delay_inputs_neurons["sep_360_to_olm_ca3"] = [2.0,1.0]
-delay_inputs_neurons["ec2_180_to_pyr_ca3"] = [2.0,1.0] # AMPA/ NMDA
-delay_inputs_neurons["ec2_180_to_bas_ca3"] = [2.0,1.0]
-delay_inputs_neurons["ec2_360_to_pyr_ca3"] = [2.0,1.0]
-delay_inputs_neurons["ec2_360_to_bas_ca3"] = [2.0,1.0]
-delay_inputs_neurons["dg_regular_to_pyr_ca3"] = [2.0,1.0]
-delay_inputs_neurons["dg_regular_to_bas_ca3"] = [2.0,1.0]
-delay_inputs_neurons["dg_burst_to_pyr_ca3"] = [2.0,1.0]
-delay_inputs_neurons["dg_burst_to_bas_ca3"] = [2.0,1.0]
+delay_external = 10.0
+delay_inputs_neurons["sep_180_to_bas_ca3"] = [delay_external,1.0]
+delay_inputs_neurons["sep_360_to_olm_ca3"] = [delay_external,1.0]
+delay_inputs_neurons["ec2_180_to_pyr_ca3"] = [delay_external,1.0] # AMPA/ NMDA
+delay_inputs_neurons["ec2_180_to_bas_ca3"] = [delay_external,1.0]
+delay_inputs_neurons["ec2_360_to_pyr_ca3"] = [delay_external,1.0]
+delay_inputs_neurons["ec2_360_to_bas_ca3"] = [delay_external,1.0]
+delay_inputs_neurons["dg_regular_to_pyr_ca3"] = [delay_external,1.0]
+delay_inputs_neurons["dg_regular_to_bas_ca3"] = [delay_external,1.0]
+delay_inputs_neurons["dg_burst_to_pyr_ca3"] = [delay_external,1.0]
+delay_inputs_neurons["dg_burst_to_bas_ca3"] = [delay_external,1.0]
 # to CA1
-delay_inputs_neurons["sep_180_to_bas_ca1"] = [2.0,1.0]
-delay_inputs_neurons["sep_360_to_olm_ca1"] = [2.0,1.0]
-delay_inputs_neurons["sep_180_to_cck_ca1"] = [2.0,1.0]
-delay_inputs_neurons["ec3_180_to_pyr_ca1"] = [2.0,1.0]
-delay_inputs_neurons["ec3_180_to_bas_ca1"] = [2.0,1.0]
-delay_inputs_neurons["ec3_180_to_cck_ca1"] = [2.0,1.0]
-delay_inputs_neurons["ec3_360_to_pyr_ca1"] = [2.0,1.0]
-delay_inputs_neurons["ec3_360_to_bas_ca1"] = [2.0,1.0]
-delay_inputs_neurons["ec3_360_to_cck_ca1"] = [2.0,1.0]
+delay_inputs_neurons["sep_180_to_bas_ca1"] = [delay_external,1.0]
+delay_inputs_neurons["sep_360_to_olm_ca1"] = [delay_external,1.0]
+delay_inputs_neurons["sep_180_to_cck_ca1"] = [delay_external,1.0]
+delay_inputs_neurons["ec3_180_to_pyr_ca1"] = [delay_external,1.0]
+delay_inputs_neurons["ec3_180_to_bas_ca1"] = [delay_external,1.0]
+delay_inputs_neurons["ec3_180_to_cck_ca1"] = [delay_external,1.0]
+delay_inputs_neurons["ec3_360_to_pyr_ca1"] = [delay_external,1.0]
+delay_inputs_neurons["ec3_360_to_bas_ca1"] = [delay_external,1.0]
+delay_inputs_neurons["ec3_360_to_cck_ca1"] = [delay_external,1.0]
 
 '''#############################################################################
                     Parameters: Background

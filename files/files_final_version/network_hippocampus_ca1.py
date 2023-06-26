@@ -499,6 +499,7 @@ class Network:
         key = keys[-1]
         file = f"external_inputs_{key}.lzma"
         data = file_management.load_lzma(os.path.join(self.inputs_folder,file))
+        print(os.path.join(self.inputs_folder,file),self.external_inputs_iseed,self.external_inputs_ibseed)
         w = (data["iseed"]==self.external_inputs_iseed) & (data["ibseed"]==self.external_inputs_ibseed)
         x = np.array( data["tvec"][w].values )
         y = np.array( data["idvec"][w].values )

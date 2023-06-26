@@ -30,7 +30,7 @@ def process_syn_data( data_unified ): #syncurrents
     data = {}
     for key in keys:
         aux = []
-        for i in range(len(data_unified[key])):
+        for i in data_unified[key][0]:
             aux.append(data_unified[key][0][i])
         data[f"i{key}_mean"] = np.mean(aux,axis=0)
         data[f"i{key}_std"]  = np.std(aux,axis=0)

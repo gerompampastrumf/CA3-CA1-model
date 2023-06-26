@@ -102,7 +102,11 @@ save_data_ica    = True
 # output of ca3 will be stored in the same folder as the external inputs
 current_folder = os.getcwd()
 inputs_folder = '/home/dimitrios/Neurons/CA1model/baselineCA3/external_inputs'
-save_folder   = '/home/dimitrios/Neurons/CA1model/baselineCA3/'
+
+file_name = __file__
+file_name = file_name.replace(current_folder,"") 
+file_name = file_name.split('_')[-1][:-3] 
+save_folder = os.path.join(current_folder, file_name)
 #save_folder = os.path.join(current_folder,"test_data")
 
 # file_name = __file__
@@ -544,7 +548,7 @@ if pc.id() == 0:
                 for j,sublfp_ in enumerate(np.array(lfp_.values_per_section).T):
                     data_ica["ca3"]["ica"].extend( np.array(sublfp_) )
                     data_ica["ca3"]["electrode"].extend( [zcoords[i]]*len(sublfp_) )
-                    data_ica["ca3"]["component"].extend( [zcoords[j]]*len(sublfp_) )
+                    data_ica["ca3"]["component"].extend( [["Bdend","soma","Adend1","Adend2","Adend3"][j]]*len(sublfp_) )
 
             data_ica["ca3"] = pd.DataFrame(data_ica["ca3"])
             for i in range(number_of_argvs):
