@@ -172,7 +172,7 @@ weights_neurons_neurons["bas_ca1_to_pyr_ca1"] = [[ 0.5*0.5*weight[10] ]] # initi
 weights_neurons_neurons["olm_ca1_to_pyr_ca1"] = [[ 57.6e-3]]  # [0.8*72.0e-3] #*0.9
 
 cck_inhibition = 8*np.linspace(0,1,21)*4.05e-4
-cck_ca1 = np.linspace(0,2,11)[9]
+cck_ca1 = np.linspace(0,4,21)[8]
 gain = np.linspace(0,4,21)
 weights_neurons_neurons["cck_ca1_to_pyr_ca1"] =  [[ cck_inhibition[10]*cck_ca1], [cck_inhibition[10]*cck_ca1]] #[[0.0],[0.0]] #[4.05e-3], [ 4.05e-3 ]] ##
 
@@ -222,7 +222,7 @@ weights_inputs_neurons["ec3_180_to_pyr_ca1"] = [[ 0.0, 0.0 ]]
 #weights_inputs_neurons["ec3_180_to_bas_ca1"] = [[0.0,0.0]]
 #weights_inputs_neurons["ec3_180_to_cck_ca1"] = [[0.0,0.0]]
 gain = np.linspace(0,1,21)
-inp_cck = np.linspace(0,1,11)[5]
+inp_cck = np.linspace(0,2,21)[6]
 weights_inputs_neurons["ec3_360_to_cck_ca1"] = [[ 4*5*3.3e-4*gain[12]*inp_cck, 1.8e-4*gain[12]*inp_cck]] #[[3.3e-4, ]]
 gain = np.linspace(0,1,21)
 weights_inputs_neurons["ec3_360_to_bas_ca1"] = [[ 0.5*3.3e-4, 0.5*1.8e-4]]
@@ -421,9 +421,6 @@ if net.DoMakeExternalInputs:
             w_list   = net.external_inputs_data[key]["weights"]
             conn     = net.external_inputs_data[key]["connectivity"]
 
-            if key.startswith("ec3_360"): # "quick solution to make cck spike before"
-                print("-10ms applied at ec360")
-                spikes -= 10
             """plt.figure()
             t = spikes[spikes<500]
             plt.hist(t,bins=np.arange(0,500,2),label=key)
