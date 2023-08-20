@@ -17,7 +17,7 @@ import random
 import sys
 import os
 # from external_inputs import *
-#sys.path.append('/home/jaime/Desktop/hippocampus/files/')
+# sys.path.append('/home/jaime/Desktop/hippocampus/files/')
 import file_management
 from neurons import *
 
@@ -134,6 +134,7 @@ class Network:
                save_input_connection=False,
                topology="rectangular",
                inputs_folder = '/home/jaime/Desktop/hippocapmp/external_inputs/baseline',
+               inputs_folder_pyr = None, # added 23/05/2023 if None, then inputs_folder is used 
             #    burst_level_label = '10',
                external_inputs_iseed=0,
                external_inputs_ibseed=0, # pyr_ca3 external inputs, 11/05/2023
@@ -218,8 +219,13 @@ class Network:
 
         self.noise_burst = noise_burst
 
-        self.inputs_folder          = inputs_folder
-        # self.burst_level_label      = burst_level_label
+        self.inputs_folder     = inputs_folder
+        self.inputs_folder_pyr = inputs_folder_pyr
+        if not inputs_folder_pyr: # added on 18/05/2023
+            self.inputs_folder = inputs_folder
+        else: 
+
+        # self.burst_level_label    = burst_level_label
         self.external_inputs_iseed  = external_inputs_iseed # external inputs iseed
         self.external_inputs_ibseed = external_inputs_ibseed # external inputs ibseed, only for pyr_ca3
 
@@ -498,11 +504,14 @@ class Network:
         
         key = keys[-1]
         file = f"external_inputs_{key}.lzma"
-        data = file_management.load_lzma(os.path.join(self.inputs_folder,file))
+        # data = file_management.load_lzma(os.path.join(self.inputs_folder,file))
+        data = file_management.load_lzma(os.path.join(self.inputs_folder_pyr,file)) # added on 18/05/2023
+
         print(os.path.join(self.inputs_folder,file),self.external_inputs_iseed,self.external_inputs_ibseed)
         w = (data["iseed"]==self.external_inputs_iseed) & (data["ibseed"]==self.external_inputs_ibseed)
         x = np.array( data["tvec"][w].values )
         y = np.array( data["idvec"][w].values )
+        print(y)
         window = np.logical_and(x>=t0,x<=tf)
         self.tvec[key]   = x[window]-t0 +125.0 # I do remember
         self.idvec[key]  = y[window]
