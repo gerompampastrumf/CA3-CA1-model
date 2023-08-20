@@ -223,7 +223,6 @@ class Network:
         self.inputs_folder_pyr = inputs_folder_pyr
         if not inputs_folder_pyr: # added on 18/05/2023
             self.inputs_folder_pyr = inputs_folder
-        else: 
 
         # self.burst_level_label    = burst_level_label
         self.external_inputs_iseed  = external_inputs_iseed # external inputs iseed
