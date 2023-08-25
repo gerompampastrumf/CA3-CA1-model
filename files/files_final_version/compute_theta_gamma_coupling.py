@@ -124,8 +124,8 @@ def compute_amplitude_coupling_from_volt(folder, input_filename, output_filename
     data_dict = dict.fromkeys(columns)
 
     outputs = []
-    for i,comp1 in enumerate(aux[:1]):
-        for j, comp2 in enumerate(aux[:1]):
+    for i,comp1 in enumerate(aux):
+        for j, comp2 in enumerate(aux):
             outputs.append(compute_amplitude_coupling(data,f"{comp1}_volt_mean",f"{comp2}_volt_mean"))
             data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"]
 
