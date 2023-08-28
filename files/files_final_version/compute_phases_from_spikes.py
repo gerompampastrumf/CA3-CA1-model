@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 import sys
+from scipy import stats
 sys.path.append('/home/jaime/Desktop/hippocampus/files_final_version/')
 import file_management
 
@@ -10,6 +11,7 @@ def compute_phases_distribution(data_frame, theta_ryhtm=125.0,binsize=15):
     bseed = np.unique(data_frame["ibseed"])
     binphase = np.arange(0,360,15)
 
+    list_counts = []
     list_phases = []
     data = dict.fromkeys(["counts","iseed","ibseed"])
     for key in data.keys():
@@ -22,7 +24,8 @@ def compute_phases_distribution(data_frame, theta_ryhtm=125.0,binsize=15):
             spikes = spikes[spikes>2000]
             phases = np.mod( spikes-50, theta_ryhtm)*360/theta_ryhtm
             counts, bins = np.histogram( phases, bins=binphase, density="True" )
-            list_phases.append(counts)
+            list_counts.append(counts)
+            list_phases.append(phases)
             # print(i,j, len(counts))
 
             data["counts"].append(counts)
@@ -30,16 +33,19 @@ def compute_phases_distribution(data_frame, theta_ryhtm=125.0,binsize=15):
             data["ibseed"].append([j]*len(counts))
     
     data["counts"] = np.concatenate(data["counts"])
-    data["iseed"] = np.concatenate(data["iseed"])
+    data["iseed"]  = np.concatenate(data["iseed"])
     data["ibseed"] = np.concatenate(data["ibseed"])
-
+    
     data = pd.DataFrame(data)
 
     data2 = dict.fromkeys(["binphase","counts_mean","counts_sem"])
     data2["binphase"] = bins[1:]-np.diff(bins)[0]/2
-    data2["counts_mean"] = np.mean(list_phases, axis=0)
-    data2["counts_sem"]  = np.std(list_phases, axis=0)/np.sqrt(len(list_phases))
-
+    data2["counts_mean"] = np.mean(list_counts, axis=0)
+    data2["counts_sem"]  = np.std(list_counts, axis=0)/np.sqrt(len(list_counts))
+    kde = stats.gaussian_kde(np.concatenate(list_phases))
+    yfit = kde(data2["binphase"])
+    data2["kde"] = yfit
+    
     data2 = pd.DataFrame(data2)
     output = {}
     output["realizations"] = data
@@ -58,7 +64,7 @@ def compute_phases_from_spikes_ca3(folder):
     for key in aux:
         columns.append(key+"_mean")
         columns.append(key+"_sem") # std/np.sqrt(n)
-    data_frame = dict.fromkeys(columns) 
+    data = dict.fromkeys(columns) 
 
     outputs = []
     # pyramidal cells
@@ -74,10 +80,12 @@ def compute_phases_from_spikes_ca3(folder):
     outputs.append( compute_phases_distribution(data_frame, theta_ryhtm=theta_ryhtm,binsize=binsize) )
 
     for i, key in enumerate(aux):
-        data_frame[key+"_mean"] = outputs[i]["average"]["counts_mean"]
-        data_frame[key+"_sem"] = outputs[i]["average"]["counts_sem"]
+        data[key+"_mean"] = outputs[i]["average"]["counts_mean"]
+        data[key+"_sem"] = outputs[i]["average"]["counts_sem"]
+        data[key+"_kde"] = outputs[i]["average"]["kde"]
+    data["binphase"] = outputs[0]["average"]["binphase"]
 
-    file_management.save_lzma(data_frame, "phases_spikes_distribution_ca3.lzma", parent_dir=parent_dir)
+    file_management.save_lzma(data,"phases_spikes_distribution_ca3.lzma", parent_dir=parent_dir)
 
 
 def compute_phases_from_spikes_ca1(folder):
@@ -92,7 +100,7 @@ def compute_phases_from_spikes_ca1(folder):
     for key in aux:
         columns.append(key+"_mean")
         columns.append(key+"_sem") # std/np.sqrt(n)
-    data_frame = dict.fromkeys(columns)
+    data = dict.fromkeys(columns)
 
     outputs = []
     # pyramidal cells
@@ -112,7 +120,9 @@ def compute_phases_from_spikes_ca1(folder):
     outputs.append( compute_phases_distribution(data_frame, theta_ryhtm=theta_ryhtm,binsize=binsize) )
 
     for i, key in enumerate(aux):
-        data_frame[key+"_mean"] = outputs[i]["average"]["counts_mean"]
-        data_frame[key+"_sem"]  = outputs[i]["average"]["counts_sem"]
+        data[key+"_mean"] = outputs[i]["average"]["counts_mean"]
+        data[key+"_sem"]  = outputs[i]["average"]["counts_sem"]
+        data[key+"_kde"]  = outputs[i]["average"]["kde"]
+    data["binphase"] = outputs[0]["average"]["binphase"]
 
-    file_management.save_lzma(data_frame,"phases_spikes_distribution_ca1.lzma",parent_dir=parent_dir)
+    file_management.save_lzma(data,"phases_spikes_distribution_ca1.lzma",parent_dir=parent_dir)

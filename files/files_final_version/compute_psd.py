@@ -85,11 +85,10 @@ def compute_psd_volt_ca3(folder):
     noverlap = 512
     nfft = 2048
     
-    aux = ["Bdend_mean", "soma",  "Adend1","Adend2","Adend3","bas","olm"]
+    aux = ["Bdend", "soma",  "Adend1","Adend2","Adend3","bas","olm"]
     columns = []
     for key in aux:
         columns.append(key+"_mean")
-        columns.append(key+"_sem")
     data_frame = dict.fromkeys(columns) 
 
     data_dict = dict.fromkeys(aux)
@@ -135,7 +134,7 @@ def compute_psd_volt_ca1(folder):
     noverlap = 512
     nfft = 2048
     
-    aux = ["Bdend_mean", "soma",  "Adend1","Adend2","Adend3","bas","olm","cck"]
+    aux = ["Bdend", "soma",  "Adend1","Adend2","Adend3","bas","olm","cck"]
     columns = []
     for key in aux:
         columns.append(key+"_mean")
