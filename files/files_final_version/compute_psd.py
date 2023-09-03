@@ -123,9 +123,8 @@ def compute_psd_volt_ca3(folder):
     data_dict["alternative"] = outputs[-1]["measurements"]
 
     data_frame = pd.DataFrame(data_frame)
-    file_management.save_lzma(data_frame, "psd_voltage_ca3.lzma", parent_dir=parent_dir)
-    file_management.save_lzma(data_dict, " psd_voltage_measurements_ca3.lzma", parent_dir=parent_dir)
-
+    file_management.save_lzma(data_frame, "psd_volt_pyr_ca3.lzma", parent_dir=parent_dir)
+    file_management.save_lzma(data_dict,  "psd_volt_pyr_measurements_ca3.lzma", parent_dir=parent_dir)
 
 def compute_psd_volt_ca1(folder):
     parent_dir = os.path.join(folder, "measurements")
@@ -174,8 +173,8 @@ def compute_psd_volt_ca1(folder):
     data_dict["alternative"] = outputs[-1]["measurements"]
 
     data_frame = pd.DataFrame(data_frame)
-    file_management.save_lzma(data_frame, "psd_voltage_ca1.lzma", parent_dir=parent_dir)
-    file_management.save_lzma(data_dict,  "psd_voltage_measurements_ca1.lzma", parent_dir=parent_dir)
+    file_management.save_lzma(data_frame, "psd_volt_pyr_ca1.lzma", parent_dir=parent_dir)
+    file_management.save_lzma(data_dict,  "psd_volt_pyr_measurements_ca1.lzma", parent_dir=parent_dir)
 
 def compute_psd_synaptic_currents_ca3(folder):
     parent_dir = os.path.join(folder, "measurements")
@@ -219,8 +218,8 @@ def compute_psd_synaptic_currents_ca3(folder):
         data_dict[key] = outputs[-1]["measurements"]
 
     data_frame = pd.DataFrame(data_frame)
-    file_management.save_lzma(data_frame, "psd_synaptic_ca3.lzma", parent_dir=parent_dir)
-    file_management.save_lzma(data_dict,  "psd_synaptic_measurements_ca3.lzma", parent_dir=parent_dir)
+    file_management.save_lzma(data_frame, "psd_synapses_ca3.lzma", parent_dir=parent_dir)
+    file_management.save_lzma(data_dict,  "psd_synapses_measurements_ca3.lzma", parent_dir=parent_dir)
 
 def compute_psd_synaptic_currents_ca1(folder):
     parent_dir = os.path.join(folder, "measurements")
@@ -262,8 +261,8 @@ def compute_psd_synaptic_currents_ca1(folder):
         data_dict[key] = outputs[-1]["measurements"]
 
     data_frame = pd.DataFrame(data_frame)
-    file_management.save_lzma(data_frame, "psd_synaptic_ca1.lzma", parent_dir=parent_dir)
-    file_management.save_lzma(data_dict,  "psd_synaptic_measurements_ca1.lzma", parent_dir=parent_dir)
+    file_management.save_lzma(data_frame, "psd_synapses_ca1.lzma", parent_dir=parent_dir)
+    file_management.save_lzma(data_dict,  "psd_synapses_measurements_ca1.lzma", parent_dir=parent_dir)
 
 def compute_psd_lfp_ca3(folder):
     parent_dir = os.path.join(folder, "measurements")

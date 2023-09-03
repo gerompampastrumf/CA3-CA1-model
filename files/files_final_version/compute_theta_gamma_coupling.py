@@ -2,6 +2,7 @@ import numpy as np
 import scipy.signal as signal
 import pandas as pd
 import scipy
+from scipy import stats
 import copy 
 import sys
 import os
@@ -10,7 +11,7 @@ import file_management
 from signal_analysis import *
 
 def compute_amplitude_coupling(data_frame,theta_reference,gamma_reference,fs = 1/0.002,f0_theta=8,df_theta=4.0, 
-                               f0_gamma=60, df_gamma=40.0, norder=4, surrogate_test=True, nsurrogates=10):
+                               f0_gamma=60, df_gamma=40.0, norder=4,surrogate_test=True, nsurrogates=10):
 
     iseed = np.unique(data_frame["iseed"])
     ibseed = np.unique(data_frame["ibseed"])
@@ -92,7 +93,7 @@ def compute_amplitude_coupling(data_frame,theta_reference,gamma_reference,fs = 1
 
     p = np.zeros(np.shape(amplitude_surrogates)[-1])
     for i in range(np.shape(amplitude_surrogates)[-1]):
-        # test signifcance 95& both sides
+        # test signifcance 95& both sidesº
         mu, std = np.mean(amplitude_surrogates[:,i]), np.std(amplitude_surrogates[:,i])
         z = (amplitude_gamma_mean[i]-mu)/std
         z_critical = scipy.stats.norm.ppf(1-alpha/2)
@@ -147,7 +148,7 @@ def compute_amplitude_coupling_from_lfp(folder, input_filename, output_filename)
     data_new["Adend2"] = data[data["electrode"]==235]["lfp"].values
     data_new["Adend3"] = data[data["electrode"]==385]["lfp"].values
 
-    aux = ["soma", "Bdend", "Adend1", "Adend2", "Adend3"]
+    aux = ["Bdend", "soma","Adend1", "Adend2", "Adend3"]
     columns = []
     for i,comp1 in enumerate(aux):
         for j, comp2 in enumerate(aux):
@@ -170,7 +171,7 @@ def compute_amplitude_coupling_from_ica(folder, input_filename, output_filename)
     outputs = []
     data_new = pd.DataFrame()
     electrodes = [-100,10, 85, 235, 385]
-    aux = ["soma", "Bdend", "Adend1", "Adend2", "Adend3"]
+    aux = ["Bdend","soma","Adend1", "Adend2", "Adend3"]
     data_new = copy.deepcopy(data[(data["electrode"]==-100) & (data["component"]=="Bdend")])
     data_new = data_new.drop(columns=["electrode", "component"])
     data_new = data_new.rename(columns={"ica": "Bdend_Bdend"})
@@ -254,3 +255,245 @@ def compute_amplitude_coupling_from_synaptic_current_ca1(folder):
         data_dict[f"{comp}"] = outputs[-1]["average"]
     
     file_management.save_lzma(data_dict, "synapses_pyr_ca1_amplitude_coupling.lzma", parent_dir = os.path.join(folder, "measurements"))
+
+def get_relative_phases_lfp(folder,fs=1/0.002,f0_theta=8,df_theta=4,norder=4):
+    ''' phases with as CA1 soma as referece'''
+
+    data = file_management.load_lzma(os.path.join(folder,"lfp_ca1.lzma"))
+
+    w = (data["iseed"]==0) & (data["ibseed"]==0) & (data["electrode"]==10)
+    n = len(data["lfp"].values[w])
+    time = np.linspace(0,0.002*n,n)
+    wtime = (time>2) & (time<30)
+
+    electrode = np.sort(np.unique(data["electrode"].values))
+
+    thetas, phases = [ [] for k in range(10)], [ [] for k in range(10)]
+    for k,elec in enumerate(electrode): 
+        for i in range(10):
+            for j in range(10):
+                w = (data["iseed"]==i) & (data["ibseed"]==j) & (data["electrode"]==elec)
+                sig = data["lfp"].values[w][wtime]
+                sig -= np.mean(sig)
+                sig_, envelope, phase = bandpass_filter_and_hilbert_transform(sig, fs=fs, f0=f0_theta, df=df_theta, norder=norder)
+                thetas[k].append(sig_)
+                phases[k].append(phase)
+
+    data = file_management.load_lzma(os.path.join(folder,"lfp_ca3.lzma"))
+    for k, elec in enumerate(electrode):
+        for i in range(10):
+            for j in range(10):
+                w = (data["iseed"]==i) & (data["ibseed"]==j) & (data["electrode"]==elec)
+                sig = data["lfp"].values[w][wtime]
+                sig -= np.mean(sig)
+                sig_, envelope, phase = bandpass_filter_and_hilbert_transform(sig, fs=fs, f0=f0_theta, df=df_theta, norder=norder)
+                thetas[k+5].append(sig_)
+                phases[k+5].append(phase)
+
+    theta_diff = []
+    for k in range(10):
+        if k != 1:
+            aux = []
+            for theta1, theta2 in zip(phases[k],phases[1]):
+                diff = np.mod(theta1-theta2,2*np.pi)
+                diff[diff>np.pi] -= 2*np.pi
+                aux.append(diff)
+
+            aux = np.concatenate(aux)
+            mu, std = np.mean(aux), np.std(aux)
+            aux[aux>mu+np.pi] -= 2*np.pi
+            aux[aux<mu-np.pi] += 2*np.pi
+            kde = stats.gaussian_kde(aux)
+            x = np.linspace(np.min(aux),np.max(aux),1001)
+            curve = kde(x)
+            theta_diff.append( x[np.argmax(curve)])
+        else:
+            theta_diff.append(0)
+        
+    return np.array(theta_diff)*180/np.pi
+
+
+def get_relative_phases_ica(folder,fs=1/0.002,f0_theta=8,df_theta=4,norder=4):
+    ''' phases with as CA1 soma as referece'''
+
+    data = file_management.load_lzma(os.path.join(folder,"ica_ca1.lzma"))
+
+    w = (data["iseed"]==0) & (data["ibseed"]==0) & (data["electrode"]==10) & (data["component"]=="soma")
+    n = len(data["ica"].values[w])
+    time = np.linspace(0,0.002*n,n)
+    wtime = (time>2) & (time<30)
+
+    electrode = np.sort(np.unique(data["electrode"].values))
+    components = ["Bdend","soma","Adend1","Adend2","Adend3"]
+
+    thetas, phases = [ [] for k in range(10)], [ [] for k in range(10)]
+    for k,(elec,comp) in enumerate(zip(electrode,components)): 
+        for i in range(10):
+            for j in range(10):
+                w = (data["iseed"]==i) & (data["ibseed"]==j) & (data["electrode"]==elec) & (data["component"]==comp)
+                sig = data["ica"].values[w][wtime]
+                sig -= np.mean(sig)
+                sig_, envelope, phase = bandpass_filter_and_hilbert_transform(sig, fs=fs, f0=f0_theta, df=df_theta, norder=norder)
+                thetas[k].append(sig_)
+                phases[k].append(phase)
+
+    data = file_management.load_lzma(os.path.join(folder,"ica_ca3.lzma"))
+    for k, (elec,comp) in enumerate(zip(electrode,components)):
+        for i in range(10):
+            for j in range(10):
+                w = (data["iseed"]==i) & (data["ibseed"]==j) & (data["electrode"]==elec)
+                sig = data["ica"].values[w][wtime]
+                sig -= np.mean(sig)
+                sig_, envelope, phase = bandpass_filter_and_hilbert_transform(sig, fs=fs, f0=f0_theta, df=df_theta, norder=norder)
+                thetas[k+5].append(sig_)
+                phases[k+5].append(phase)
+
+    theta_diff = []
+    for k in range(10):
+        if k != 1:
+            aux = []
+            for theta1, theta2 in zip(phases[k],phases[1]):
+                diff = np.mod(theta1-theta2,2*np.pi)
+                diff[diff>np.pi] -= 2*np.pi
+                aux.append(diff)
+
+            aux = np.concatenate(aux)
+            mu, std = np.mean(aux), np.std(aux)
+            aux[aux>mu+np.pi] -= 2*np.pi
+            aux[aux<mu-np.pi] += 2*np.pi
+            kde = stats.gaussian_kde(aux)
+            x = np.linspace(np.min(aux),np.max(aux),1001)
+            curve = kde(x)
+            theta_diff.append( x[np.argmax(curve)])
+        else:
+            theta_diff.append(0)
+        
+    return np.array(theta_diff)*180/np.pi
+
+
+def get_relative_phases_volt(folder,fs=1/0.002,f0_theta=8,df_theta=4,norder=4):
+    ''' phases with as CA1 soma as referece'''
+
+    data = file_management.load_lzma(os.path.join(folder,"volt_pyr_ca1.lzma"))
+
+    w = (data["iseed"]==0) & (data["ibseed"]==0)
+    n = len(data["soma_volt_mean"].values[w])
+    time = np.linspace(0,0.002*n,n)
+    wtime = (time>2) & (time<30)
+
+    components = ["Bdend","soma","Adend1","Adend2","Adend3"]
+    thetas, phases = [ [] for k in range(10)], [ [] for k in range(10)]
+    for k,comp in enumerate(components): 
+        for i in range(10):
+            for j in range(10):
+                w = (data["iseed"]==i) & (data["ibseed"]==j)
+                sig = data[f"{comp}_volt_mean"].values[w][wtime]
+                sig -= np.mean(sig)
+                sig_, envelope, phase = bandpass_filter_and_hilbert_transform(sig, fs=fs, f0=f0_theta, df=df_theta, norder=norder)
+                thetas[k].append(sig_)
+                phases[k].append(phase)
+
+    data = file_management.load_lzma(os.path.join(folder,"volt_pyr_ca3.lzma"))
+    for k, comp in enumerate(components):
+        for i in range(10):
+            for j in range(10):
+                w = (data["iseed"]==i) & (data["ibseed"]==j)
+                sig = data[f"{comp}_volt_mean"].values[w][wtime]
+                sig -= np.mean(sig)
+                sig_, envelope, phase = bandpass_filter_and_hilbert_transform(sig, fs=fs, f0=f0_theta, df=df_theta, norder=norder)
+                thetas[k+5].append(sig_)
+                phases[k+5].append(phase)
+
+    theta_diff = []
+    for k in range(10):
+        if k != 1:
+            aux = []
+            for theta1, theta2 in zip(phases[k],phases[1]):
+                diff = np.mod(theta1-theta2,2*np.pi)
+                diff[diff>np.pi] -= 2*np.pi
+                aux.append(diff)
+
+            aux = np.concatenate(aux)
+            mu, std = np.mean(aux), np.std(aux)
+            aux[aux>mu+np.pi] -= 2*np.pi
+            aux[aux<mu-np.pi] += 2*np.pi
+            kde = stats.gaussian_kde(aux)
+            x = np.linspace(np.min(aux),np.max(aux),1001)
+            curve = kde(x)
+            theta_diff.append( x[np.argmax(curve)] )
+        else:
+            theta_diff.append(0)
+        
+    return np.array(theta_diff)*180/np.pi
+
+
+def get_relative_phases_synapses(folder,fs=1/0.002,f0_theta=8,df_theta=4,norder=4):
+    
+    data = file_management.load_lzma(os.path.join(folder,"synapses_ca1.lzma"))
+    ######################################################################################
+    # sum of currents per compartment
+    data["iAdend3"] = data["iAdend3GABA_olm_mean"]+data["iAdend3AMPA_noise_mean"] + data["iAdend3GABA_noise_mean"] + data["iAdend3AMPA_ec3180_mean"] + data["iAdend3NMDA_ec3180_mean"] + data["iAdend3AMPA_ec3360_mean"] + data["iAdend3NMDA_ec3360_mean"]
+    data["iAdend2"] = data["iAdend2GABA_cck_mean"]
+    data["iAdend1"] = data["iAdend1AMPA_pyrCA3_mean"] + data["iAdend1NMDA_pyrCA3_mean"]
+    data["isoma"]   = data["isomaGABA_cck_mean"]  + data["isomaGABA_bas_mean"] + data["isomaAMPA_noise_mean"] + data["isomaGABA_noise_mean"]
+    data["iBdend"]  = data["iBdendAMPA_pyr_mean"] + data["iBdendNMDA_pyr_mean"]
+    ######################################################################################
+
+    w = (data["iseed"]==0) & (data["ibseed"]==0)
+    n = len(data["isoma"].values[w])
+    time = np.linspace(0,0.002*n,n)
+    wtime = (time>2) & (time<30)
+
+    components = ["iBdend","isoma","iAdend1","iAdend2","iAdend3"]
+    thetas, phases = [ [] for k in range(10)], [ [] for k in range(10)]
+    for k,comp in enumerate(components): 
+        for i in range(10):
+            for j in range(10):
+                w = (data["iseed"]==i) & (data["ibseed"]==j)
+                sig = data[f"{comp}"].values[w][wtime]
+                sig -= np.mean(sig)
+                sig_, envelope, phase = bandpass_filter_and_hilbert_transform(sig, fs=fs, f0=f0_theta, df=df_theta, norder=norder)
+                thetas[k].append(sig_)
+                phases[k].append(phase)
+
+    data = file_management.load_lzma(os.path.join(folder,"synapses_ca3.lzma"))
+    ######################################################################################
+    data["iAdend3"] = data["iAdend3GABA_olm_mean"] + data["iAdend3AMPA_ec2360_mean"] + data["iAdend3NMDA_ec2360_mean"] + data["iAdend3GABA_noise_mean"] + data["iAdend3AMPA_noise_mean"] + data["iAdend3AMPA_ec2180_mean"] + data["iAdend3NMDA_ec2180_mean"]
+    data["iAdend2"] = data["iAdend3GABA_olm_mean"]*0
+    data["iAdend1"] = data["iAdend1AMPA_dgreg_mean"] + data["iAdend1NMDA_dgreg_mean"] + data["iAdend1AMPA_dgburst_mean"] + data["iAdend1NMDA_dgburst_mean"]
+    data["isoma"]   = data["isomaGABA_bas_mean"]  + data["isomaAMPA_noise_mean"] + data["isomaGABA_noise_mean"]
+    data["iBdend"]  = data["iBdendAMPA_pyr_mean"] + data["iBdendNMDA_pyr_mean"]
+    
+    components = ["iAdend3","iAdend2","iAdend1","isoma","iBdend"]
+    
+    for k, comp in enumerate(components):
+        for i in range(10):
+            for j in range(10):
+                w = (data["iseed"]==i) & (data["ibseed"]==j)
+                sig = data[f"{comp}"].values[w][wtime]
+                sig -= np.mean(sig)
+                sig_, envelope, phase = bandpass_filter_and_hilbert_transform(sig, fs=fs, f0=f0_theta, df=df_theta, norder=norder)
+                thetas[k+5].append(sig_)
+                phases[k+5].append(phase)
+
+    theta_diff = []
+    for k in range(10):
+        if k != 1:
+            aux = []
+            for theta1, theta2 in zip(phases[k],phases[1]):
+                diff = np.mod(theta1-theta2,2*np.pi)
+                diff[diff>np.pi] -= 2*np.pi
+                aux.append(diff)
+
+            aux = np.concatenate(aux)
+            mu, std = np.mean(aux), np.std(aux)
+            aux[aux>mu+np.pi] -= 2*np.pi
+            aux[aux<mu-np.pi] += 2*np.pi
+            kde = stats.gaussian_kde(aux)
+            x = np.linspace(np.min(aux),np.max(aux),1001)
+            curve = kde(x)
+            theta_diff.append( x[np.argmax(curve)] )
+        else:
+            theta_diff.append(0)
+        
+    return np.array(theta_diff*180)/np.pi

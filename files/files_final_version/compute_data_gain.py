@@ -6,15 +6,16 @@ import compute_theta_gamma_coupling as ctgc
 import compute_theta_gamma_coupling_ref as ctgcr
 
 # compute data of the first table:
-folders = ["baseline","baseline_nobasketCA3","baseline_noolmCA3","baseline_noinhibitionCA3",
-           "baseline_nobasketCA1","baseline_noolmCA1","baseline_nocckCA1",
-           "baseline_nobasketnocckCA1","baseline_noolmnocckCA1","baseline_nobasketnoolmCA1",
-           "baseline_noinhibitionCA1",]
+folders = ["MSCA3_0","MSCA3_1","MSCA3_2","MSCA3_3",
+           "EC2CA3_0", "EC2CA3_1", "EC2CA3_2", "EC2CA3_3",
+           "DGCA3_0", "DGCA3_1", "DGCA3_2", "DGCA3_3",
+           "EC3CA1_0", "EC3CA1_1", "EC3CA1_2", "EC3CA1_3",
+           "PYRCA3CA1_0","PYRCA3CA1_1","PYRCA3CA1_2","PYRCA3CA1_3"]
 
-path = '/home/jaime/Desktop/hippocampus/external_inputs/'
+path = '/home/jaime/Desktop/hippocampus/external_inputs/baseline/'
 
 path_ca3 = os.path.join(path, folders[int(sys.argv[1])])
-path_ca1 = path_ca3#os.path.join(path,'baseline') # they will be different in a specific cases.. where actually ca3 would be already computed
+path_ca1 = os.path.join(path, folders[int(sys.argv[1])])#'/home/jaime/Desktop/hippocampus/external_inputs/'#os.path.join(path,'baseline') # they will be different in a specific cases.. where ctually ca3 would be already computed
 
 print("Computing PSDs CA3 ...")
 try:
@@ -86,7 +87,7 @@ try:
     print(" ")
 except FileNotFoundError:
     print("... no CA1 files in this folder")
-
+    print(" ")
 
 print("Computing cross theta-gamma coupling with soma pyr CA1 as reference ...")
 try:
@@ -105,5 +106,4 @@ try:
 
 except FileNotFoundError:
     print("... no CA1 files in this folder")
-
 print(" FINISHED ")
