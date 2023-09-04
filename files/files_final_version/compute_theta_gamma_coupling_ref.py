@@ -1,3 +1,8 @@
+'''
+As a diference to the other file called simililary, the idea of this function is to compute the gamma-theta coupling across sections
+but keeping the phase reference of the soma pyr CA1, which is an standard. However this can be changed inside the functions.
+'''
+
 import numpy as np
 import scipy.signal as signal
 import pandas as pd
@@ -227,14 +232,13 @@ def compute_amplitude_coupling_from_ica(folder_ca3,folder_ca1, input_filename_ca
     outputs = []
     data_new = pd.DataFrame()
     electrodes = [-100,10, 85, 235, 385]
-    aux_ca3 = ["Bdend","soma","Adend1", "Adend2", "Adend3"]
-    aux_ca1 = ["Bdend","soma","Adend1", "Adend2", "Adend3"]
-    data_new = copy.deepcopy(data_ca3[(data_ca3["electrode"]==-100) & (data_ca3["component"]=="Bdend")])
-    data_new = data_new.drop(columns=["electrode", "component"])
-    data_new = data_new.rename(columns={"ica": "Bdend_Bdend"})
-    for elec, comp in zip(electrodes,aux_ca3):
-        data_new[f"{comp}"] = data_ca3[(data_ca3["electrode"]==elec) & (data_ca3["component"]==comp)]["ica"].values #soma-soma, Bdend-Bdend, Adend1-Adend1, Adend2-Adend2, Adend3-Adend3
-    for elec, comp in zip(electrodes,aux_ca1):
+    aux = ["Bdend", "soma", "Adend1", "Adend2", "Adend3"]
+    aux_ca3 = ["Bdend_ca3","soma_ca3","Adend1_ca3", "Adend2_ca3", "Adend3_ca3"]
+    aux_ca1 = ["Bdend_ca1","soma_ca1","Adend1_ca1", "Adend2_ca1", "Adend3_ca1"]
+    
+    for elec, comp in zip(electrodes,aux):
+        data_new[f"{comp}_ca3"] = data_ca3[(data_ca3["electrode"]==elec) & (data_ca3["component"]==comp)]["ica"].values #soma-soma, Bdend-Bdend, Adend1-Adend1, Adend2-Adend2, Adend3-Adend3
+    for elec, comp in zip(electrodes,aux):
         data_new[f"{comp}_ca1"] = data_ca1[(data_ca1["electrode"]==elec) & (data_ca1["component"]==comp)]["ica"].values
     
     columns = [] 
