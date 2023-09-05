@@ -26,7 +26,7 @@ def compute_amplitude_coupling(data_frame,theta_reference,theta_component,gamma_
     time = np.linspace(0, n/fs, n)
     wtime = (time>2) & (time<30)
 
-    pbins = np.arange(0,2*np.pi,15*np.pi/180)
+    pbins = np.arange(0,2*np.pi+1e-3,5*np.pi/180) # binsize increase x3, from 15º to 5º in order to visualize thet-phase difference between soma and Adend3
     nbins = len(pbins)
 
 
@@ -227,20 +227,45 @@ def compute_amplitude_coupling_from_ica(folder_ca3,folder_ca1, input_filename_ca
     data_ca3 = file_management.load_lzma(input_filename_ca3)
     data_ca1 = file_management.load_lzma(input_filename_ca1)
 
-    # empty datafrmae
-
     outputs = []
-    data_new = pd.DataFrame()
     electrodes = [-100,10, 85, 235, 385]
     aux = ["Bdend", "soma", "Adend1", "Adend2", "Adend3"]
     aux_ca3 = ["Bdend_ca3","soma_ca3","Adend1_ca3", "Adend2_ca3", "Adend3_ca3"]
     aux_ca1 = ["Bdend_ca1","soma_ca1","Adend1_ca1", "Adend2_ca1", "Adend3_ca1"]
+  
+    data_new = {}
+    for comp in aux:
+        data_new[f"{comp}_ca3"] = []
+        data_new[f"{comp}_ca1"] = []
+    data_new["iseed"] = []
+    data_new["ibseed"] = [] 
     
-    for elec, comp in zip(electrodes,aux):
-        data_new[f"{comp}_ca3"] = data_ca3[(data_ca3["electrode"]==elec) & (data_ca3["component"]==comp)]["ica"].values #soma-soma, Bdend-Bdend, Adend1-Adend1, Adend2-Adend2, Adend3-Adend3
-    for elec, comp in zip(electrodes,aux):
-        data_new[f"{comp}_ca1"] = data_ca1[(data_ca1["electrode"]==elec) & (data_ca1["component"]==comp)]["ica"].values
-    
+    iseed = np.sort(np.unique(data_ca3["iseed"].values))
+    ibseed = np.sort(np.unique(data_ca3["ibseed"].values))
+
+    try:
+        ilist, jlist = [],[]
+        for i in iseed:
+            for j in ibseed:
+                wca3 = (data_ca3["iseed"]==i) & (data_ca3["ibseed"]==j)
+                wca1 = (data_ca1["iseed"]==i) & (data_ca1["ibseed"]==j)
+                for elec, comp in zip(electrodes, aux):
+                    w = wca3 & (data_ca3["electrode"]==elec) & (data_ca3["component"]==comp)
+                    data_new[f"{comp}_ca3"].append( data_ca3[w]["ica"].values )
+                    w = wca1 & (data_ca1["electrode"]==elec) & (data_ca1["component"]==comp)
+                    data_new[f"{comp}_ca1"].append( data_ca1[w]["ica"].values )
+                n = len(data_new[f"{comp}_ca3"][-1])
+                ilist.append([i]*n)
+                jlist.append([j]*n)
+        for comp in aux: 
+            data_new[f"{comp}_ca3"] = np.concatenate(data_new[f"{comp}_ca3"])
+            data_new[f"{comp}_ca1"] = np.concatenate(data_new[f"{comp}_ca1"])
+        data_new["iseed"] = np.concatenate(ilist)
+        data_new["ibseed"] = np.concatenate(jlist)
+        data_new = pd.DataFrame(data_new)
+    except:
+        print("Probably the data frames have different iseed and ibseed columns")
+      
     columns = [] 
     for i,comp1 in enumerate(aux_ca3):
         for j, comp2 in enumerate(aux_ca3):
@@ -248,17 +273,15 @@ def compute_amplitude_coupling_from_ica(folder_ca3,folder_ca1, input_filename_ca
     for i,comp1 in enumerate(aux_ca1):
         for j, comp2 in enumerate(aux_ca1):
             columns.append(f"{comp1}_{comp2}")
-
     data_dict = dict.fromkeys(columns)
 
     for i,comp1 in enumerate(aux_ca3):
         for j, comp2 in enumerate(aux_ca3):
-            outputs.append(compute_amplitude_coupling(data_new,"soma_soma_ca1",comp1,comp2))
+            outputs.append(compute_amplitude_coupling(data_new,"soma_ca1",comp1,comp2))
             data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"]
-
     for i,comp1 in enumerate(aux_ca1):
         for j, comp2 in enumerate(aux_ca1):
-            outputs.append(compute_amplitude_coupling(data_new,"soma_soma_ca1",comp1,comp2))
+            outputs.append(compute_amplitude_coupling(data_new,"soma_ca1",comp1,comp2))
             data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"]
     
     file_management.save_lzma(data_dict, output_filename, parent_dir = os.path.join(folder_ca1, "measurements"))
