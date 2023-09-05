@@ -21,7 +21,7 @@ def compute_amplitude_coupling(data_frame,theta_reference,gamma_reference,fs = 1
     time = np.linspace(0, n/fs, n)
     wtime = (time>2) & (time<30)
 
-    pbins = np.arange(0,2*np.pi,15*np.pi/180)
+    pbins = np.arange(0,2*np.pi+1e-3,5*np.pi/180) #bins increased in order to visualize the phase difference among the theta components of the different layers.
     nbins = len(pbins)
 
     amplitude_gamma_list = []
