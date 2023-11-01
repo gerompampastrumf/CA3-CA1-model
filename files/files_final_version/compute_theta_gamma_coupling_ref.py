@@ -6,6 +6,7 @@ from scipy import stats
 import copy 
 import sys
 import os
+import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from neurodsp.filt import filter_signal
 from bycycle.cyclepoints import find_extrema, find_zerox
@@ -53,10 +54,11 @@ def compute_amplitude_coupling(data_frame,theta_reference,theta_component,gamma_
 
             phase_ref = np.mod(phase_ref+np.pi,2*np.pi)
             phase_theta = np.mod(phase_theta+np.pi,2*np.pi)
-
+        
             phase_diff = np.mod(phase_theta-phase_ref,2*np.pi) 
             phase_diff[phase_diff>np.pi] -= 2*np.pi
             counts, phase_bins = np.histogram(phase_diff, bins=21)
+
             phase_bins = phase_bins[1:]-np.diff(phase_bins)[0]/2
             phase_diff = phase_bins[np.argmax(counts)]
                 
@@ -196,6 +198,13 @@ def compute_amplitude_coupling_bycycle(data_frame,theta_reference,theta_componen
                 decays = decays[1:]
             while decays[-1] > troughs_max:
                 decays = decays[:-1]
+            
+            # furhter check to avoid initial nans 
+            if troughs[0] == rises[0]:
+                troughs = troughs[1:]
+                rises = rises[1:]
+                peaks = peaks[1:]
+                decays = decays[1:]
 
             time_ref_binned,phase_theta_ref_binned = [],[]
             for ii in range(len(troughs)-1):
@@ -231,6 +240,13 @@ def compute_amplitude_coupling_bycycle(data_frame,theta_reference,theta_componen
                 decays = decays[1:]
             while decays[-1] > troughs_max:
                 decays = decays[:-1]
+            
+            # furhter check to avoid initial nans 
+            if troughs[0] == rises[0]:
+                troughs = troughs[1:]
+                rises = rises[1:]
+                peaks = peaks[1:]
+                decays = decays[1:]
 
             time_sig1_binned,phase_theta_sig1_binned = [],[]
             for ii in range(len(troughs)-1):
@@ -248,6 +264,11 @@ def compute_amplitude_coupling_bycycle(data_frame,theta_reference,theta_componen
             interpolated_phase_theta_ref_binned = interpolator(time_sig1_binned)
 
             phase_diff = np.mod(phase_theta_sig1_binned-interpolated_phase_theta_ref_binned,2*np.pi)
+            
+            print("iseed:",i,"ibseed:",j)
+            print("phase_theta:",phase_theta_sig1_binned)
+            print("phase_ref:",interpolated_phase_theta_ref_binned)
+            
             phase_diff[phase_diff>np.pi] -= 2*np.pi
             counts, phase_bins = np.histogram(phase_diff, bins=21)
             phase_bins = phase_bins[1:]-np.diff(phase_bins)[0]/2
@@ -376,6 +397,9 @@ def compute_amplitude_coupling_from_volt(folder_ca3,folder_ca1,input_filename_ca
     data_new["Adend2_ca1_volt_mean"] = data_ca1["Adend2_volt_mean"].values
     data_new["Adend3_ca1_volt_mean"] = data_ca1["Adend3_volt_mean"].values
 
+    data_new["alternative_ca3_volt_mean"] = data_ca3["Adend3_volt_mean"].values-data_ca3["Bdend_volt_mean"]
+    data_new["alternative_ca1_volt_mean"] = data_ca1["Adend3_volt_mean"].values-data_ca1["Bdend_volt_mean"]
+    
     aux_ca3 = ["Bdend_ca3","soma_ca3", "Adend1_ca3", "Adend2_ca3", "Adend3_ca3"]
     aux_ca1 = ["Bdend_ca1","soma_ca1", "Adend1_ca1", "Adend2_ca1", "Adend3_ca1"]
     columns = []
@@ -396,6 +420,11 @@ def compute_amplitude_coupling_from_volt(folder_ca3,folder_ca1,input_filename_ca
         for j, comp2 in enumerate(aux_ca1):
             outputs.append(compute_amplitude_coupling(data_new,"soma_ca1_volt_mean",f"{comp1}_volt_mean",f"{comp2}_volt_mean"))
             data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"]
+    
+    outputs.append(compute_amplitude_coupling(data_new),"alternative_ca1_volt_mean","alternative_ca3_volt_mean","alternative_ca3_volt_mean")
+    data_dict[f"alternative_ca3_alternative_ca3"] = outputs[-1]["average"]
+    outputs.append(compute_amplitude_coupling(data_new),"alternative_ca1_volt_mean","alternative_ca1_volt_mean","alternative_ca1_volt_mean")
+    data_dict[f"alternative_ca1_alternative_ca1"] = outputs[-1]["average"]
 
     file_management.save_lzma(data_dict, output_filename, parent_dir = os.path.join(folder_ca1, "measurements"))
 
@@ -408,7 +437,12 @@ def compute_amplitude_coupling_from_volt(folder_ca3,folder_ca1,input_filename_ca
         for j, comp2 in enumerate(aux_ca1):
             outputs.append(compute_amplitude_coupling_bycycle(data_new,"soma_ca1_volt_mean",f"{comp1}_volt_mean",f"{comp2}_volt_mean"))
             data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"]
-    
+
+    outputs.append(compute_amplitude_coupling_bycycle(data_new,"alternative_ca1_volt_mean","alternative_ca3_volt_mean","alternative_ca3_volt_mean")
+    data_dict[f"alternative_ca3_alternative_ca3"] = outputs[-1]["average"]
+    outputs.append(compute_amplitude_coupling_bycycle(data_new,"alternative_ca1_volt_mean","alternative_ca1_volt_mean","alternative_ca1_volt_mean")
+    data_dict[f"alternative_ca1_alternative_ca1"] = outputs[-1]["average"]
+
     output_filename = output_filename.replace(".lzma","_bycycle.lzma")
     file_management.save_lzma(data_dict, output_filename, parent_dir = os.path.join(folder_ca1, "measurements"))
 
@@ -451,21 +485,22 @@ def compute_amplitude_coupling_from_lfp(folder_ca3, folder_ca1, input_filename_c
             columns.append(f"{comp1}_{comp2}")
     data_dict = dict.fromkeys(columns)
 
+    # outputs = []
+    # for i,comp1 in enumerate(aux_ca3):
+    #     for j, comp2 in enumerate(aux_ca3):
+    #         outputs.append(compute_amplitude_coupling(data_new,"soma_ca1",comp1,comp2))
+    #         data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"] 
+    # for i,comp1 in enumerate(aux_ca1):
+    #     for j, comp2 in enumerate(aux_ca1):
+    #         outputs.append(compute_amplitude_coupling(data_new,"soma_ca1",comp1,comp2))
+    #         data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"]
+
+    # file_management.save_lzma(data_dict, output_filename, parent_dir = os.path.join(folder_ca1, "measurements"))
+
     outputs = []
     for i,comp1 in enumerate(aux_ca3):
         for j, comp2 in enumerate(aux_ca3):
-            outputs.append(compute_amplitude_coupling(data_new,"soma_ca1",comp1,comp2))
-            data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"] 
-    for i,comp1 in enumerate(aux_ca1):
-        for j, comp2 in enumerate(aux_ca1):
-            outputs.append(compute_amplitude_coupling(data_new,"soma_ca1",comp1,comp2))
-            data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"]
-
-    file_management.save_lzma(data_dict, output_filename, parent_dir = os.path.join(folder_ca1, "measurements"))
-
-    outputs = []
-    for i,comp1 in enumerate(aux_ca3):
-        for j, comp2 in enumerate(aux_ca3):
+            print("ca3", comp1,comp2)
             outputs.append(compute_amplitude_coupling_bycycle(data_new,"soma_ca1",comp1,comp2))
             data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"] 
     for i,comp1 in enumerate(aux_ca1):
@@ -475,7 +510,6 @@ def compute_amplitude_coupling_from_lfp(folder_ca3, folder_ca1, input_filename_c
 
     output_filename = output_filename.replace(".lzma","_bycycle.lzma")
     file_management.save_lzma(data_dict, output_filename, parent_dir = os.path.join(folder_ca1, "measurements"))
-
 
 def compute_amplitude_coupling_from_ica(folder_ca3,folder_ca1, input_filename_ca3, input_filename_ca1, output_filename):
     input_filename_ca3  = os.path.join(folder_ca3, input_filename_ca3)

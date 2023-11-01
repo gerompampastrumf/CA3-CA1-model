@@ -309,6 +309,10 @@ def compute_amplitude_coupling_from_volt(folder, input_filename, output_filename
     data = file_management.load_lzma(filename)
     aux = ["Bdend","soma","Adend1","Adend2","Adend3"]
 
+    ## add the alternative in which lfp = volt_adend3 - volt_bdend
+    data["alternative_mean"] = data["Adend3_volt_mean"] - data["Bdend_volt_mean"]
+    data["alternative_mean"] = data["Adend3_volt_mean"] - data["Bdend_volt_mean"]
+
     columns = []
     for i,comp1 in enumerate(aux):
         for j, comp2 in enumerate(aux):
@@ -320,6 +324,9 @@ def compute_amplitude_coupling_from_volt(folder, input_filename, output_filename
         for j, comp2 in enumerate(aux):
             outputs.append(compute_amplitude_coupling(data,f"{comp1}_volt_mean",f"{comp2}_volt_mean"))
             data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"]
+    
+    outputs.append(compute_amplitude_coupling(data,"alternative_mean","alternative_mean"))
+    data_dict["alternative_alternative"] = outputs[-1]["average"]
 
     file_management.save_lzma(data_dict, output_filename, parent_dir = os.path.join(folder, "measurements"))
 
@@ -328,10 +335,12 @@ def compute_amplitude_coupling_from_volt(folder, input_filename, output_filename
         for j, comp2 in enumerate(aux):
             outputs.append(compute_amplitude_coupling_bycycle(data,f"{comp1}_volt_mean",f"{comp2}_volt_mean"))
             data_dict[f"{comp1}_{comp2}"] = outputs[-1]["average"]
+    
+    outputs.append(compute_amplitude_coupling(data,"alternative_mean","alternative_mean"))
+    data_dict["alternative_alternative"] = outputs[-1]["average"]
 
     output_filename = output_filename.replace(".lzma","_bycycle.lzma")
     file_management.save_lzma(data_dict, output_filename, parent_dir = os.path.join(folder, "measurements"))
-
 
 def compute_amplitude_coupling_from_lfp(folder, input_filename, output_filename):
     filename = os.path.join(folder, input_filename)
