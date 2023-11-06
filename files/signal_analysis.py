@@ -511,12 +511,13 @@ def surrogate_generation(timeseries, nsurrogates, method ="block boostrapping" ,
             surrogate_list.append( surrogate )
             
     if method == "block boostrapping":
-        timeseries_splitted = np.array( np.array_split(timeseries, nsplits) ) 
-        ns = len(timeseries_splitted)
+        timeseries_splitted = np.array_split(timeseries, nsplits) 
         for _ in range(nsurrogates):
-            indexes_surrogate = np.random.choice( np.arange(ns), size = ns, replace=replace)
-            surrogate = np.concatenate( timeseries_splitted[indexes_surrogate] )
-            surrogate_list.append( surrogate )
+            indexes_surrogate = np.random.choice( np.arange(nsplits), size = nsplits, replace=replace)
+            surrogate = []
+            for index in indexes_surrogate: 
+                surrogate.append(  timeseries_splitted[index] )
+            surrogate_list.append( np.concatenate(surrogate) )
             
     return surrogate_list 
 
